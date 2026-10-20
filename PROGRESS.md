@@ -119,6 +119,7 @@ Findings worth flagging to reviewers:
 - **Documents**: `CONTRIBUTING.md` (privacy invariants stated as non-negotiable, parser changes test-first), `SECURITY.md` (private reporting, scope, what is out of scope), `docs/PRIVACY.md` (mechanism per promise, a 30-second DevTools verification, threat model, and an explicit list of what the tool cannot protect you from), `CODE_OF_CONDUCT.md`, MIT `LICENSE` (with dotenv attribution), issue templates (parser edge case requires a fake-value reproduction), PR template, `favicon.svg`, Open Graph tags.
 - **README** rewritten for a shipped product rather than a specification, with an honest limits section instead of a marketing claim.
 - Test count corrected in the copy: the PRD's "60+ fixtures" target is **32 fixtures today**; the README says what exists, not what was planned.
+- **Deployment**: `vercel.json` (security headers, `no-store` on HTML, `/privacy` and `/about` rewrites) is committed and the Vercel project `env-compare` exists on the `SynergyFlowLabs` hobby team. It could not be linked to the repository from here — the Vercel connector rejects a structured `git_repository`/`git_source` argument — so the remaining step is one click in the dashboard: **Project → Settings → Git → Connect `SynergyFlowLabs/env-compare`**, production branch `main`. Every push to `main` then deploys with no further configuration.
 
 ---
 
