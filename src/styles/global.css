@@ -98,6 +98,15 @@
     outline-offset: 2px;
   }
 
+  /*
+   * Lucide ships stroke-width="2" as a presentation attribute. 1.75 is the
+   * house weight: crisp at 14px, less shouty at 20px, and consistent across
+   * every icon because it is set once here rather than per import.
+   */
+  svg.lucide {
+    stroke-width: 1.75;
+  }
+
   ::selection {
     background: var(--accent-tint);
     color: var(--ink);

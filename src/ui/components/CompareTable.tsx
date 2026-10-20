@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Eraser, EqualNot, Eye, Plus, Trash2 } from 'lucide-react';
 import {
   PRESENCE_LABEL,
   sortRows,
@@ -125,9 +126,7 @@ export function CompareTable({
                     <span className="mono text-[12.5px] font-medium tracking-tight">{row.key}</span>
                     {row.valueDiffers ? (
                       <span className="ml-2 inline-flex items-center gap-1 align-middle text-[11.5px] font-medium text-differs">
-                        <span className="mono leading-none" aria-hidden="true">
-                          ≠
-                        </span>
+                        <EqualNot className="size-3.5" aria-hidden="true" focusable="false" />
                         <span className="sr-only">Set differently in each file</span>
                       </span>
                     ) : null}
@@ -290,6 +289,7 @@ function CellView({
           onClick={() => actions.onReveal(fileId, row.key)}
           aria-label={`Show the value of ${row.key} in ${fileLabel}`}
         >
+          <Eye className="size-3" aria-hidden="true" focusable="false" />
           Show
         </Button>
       ) : null}
@@ -303,7 +303,8 @@ function CellView({
           onClick={() => actions.onAdd(fileId, row.key)}
           aria-label={`Add ${row.key} to ${fileLabel}`}
         >
-          + Add
+          <Plus className="size-3" aria-hidden="true" focusable="false" />
+          Add
         </Button>
       ) : null}
 
@@ -316,6 +317,7 @@ function CellView({
           onClick={() => cell.occurrence && actions.onUncomment(fileId, cell.occurrence.line)}
           aria-label={`Uncomment ${row.key} in ${fileLabel}`}
         >
+          <Eraser className="size-3" aria-hidden="true" focusable="false" />
           Uncomment
         </Button>
       ) : null}
@@ -329,6 +331,7 @@ function CellView({
           onClick={() => cell.occurrence && actions.onRemove(fileId, cell.occurrence.span)}
           aria-label={`Remove ${row.key} from ${fileLabel}`}
         >
+          <Trash2 className="size-3" aria-hidden="true" focusable="false" />
           Remove
         </Button>
       ) : null}

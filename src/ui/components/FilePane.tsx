@@ -1,4 +1,5 @@
 import { useRef, useState, type ChangeEvent, type DragEvent } from 'react';
+import { FileText, FileUp, Pencil, Upload, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -15,6 +16,8 @@ interface FilePaneProps {
   keyCount: number;
   lineCount: number;
   onText: (text: string) => void;
+  /** Called for a paste, which is allowed to advance to the results view. */
+  onPaste: (text: string) => void;
   onName: (name: string) => void;
   onProblem: (message: string) => void;
 }
@@ -27,11 +30,15 @@ export function FilePane({
   keyCount,
   lineCount,
   onText,
+  onPaste,
   onName,
   onProblem,
 }: FilePaneProps) {
   const [dragging, setDragging] = useState(false);
+  const dragDepth = useRef(0);
+  const pasting = useRef(false);
   const pickerRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
 
   const readFile = async (file: File) => {
     if (file.size > MAX_BYTES) {
@@ -53,10 +60,38 @@ export function FilePane({
     onName(file.name);
   };
 
+  const hasFiles = (event: DragEvent) => Array.from(event.dataTransfer?.types ?? []).includes('Files');
+
+  const handleDragEnter = (event: DragEvent<HTMLDivElement>) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    dragDepth.current += 1;
+    setDragging(true);
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (!hasFiles(event)) return;
+    // Without this the browser navigates to the dropped file.
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    if (!hasFiles(event)) return;
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setDragging(false);
+  };
+
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    dragDepth.current = 0;
     setDragging(false);
-    const file = event.dataTransfer.files?.[0];
+    const files = event.dataTransfer.files;
+    if (!files?.length) return;
+    if (files.length > 1) {
+      onProblem('One file per box — drop the second file in the other one.');
+    }
+    const file = files[0];
     if (file) void readFile(file);
   };
 
@@ -66,45 +101,88 @@ export function FilePane({
     event.target.value = '';
   };
 
+  const role = isReference ? 'reference' : 'target';
+
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-col rounded-lg border bg-card transition-colors',
-        dragging ? 'border-ring bg-brand-soft/40 ring-[3px] ring-ring/20' : 'border-border',
+        'relative flex min-w-0 flex-col rounded-lg border bg-card transition-colors',
+        dragging ? 'border-ring ring-[3px] ring-ring/20' : 'border-border',
       )}
-      onDragOver={(event) => {
-        event.preventDefault();
-        setDragging(true);
-      }}
-      onDragLeave={() => setDragging(false)}
+      data-dragging={dragging ? 'true' : undefined}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+        <FileText className="size-3.5 shrink-0 text-faint" aria-hidden="true" />
         <Label htmlFor={`name-${id}`} className="sr-only">
-          File name for the {isReference ? 'reference' : 'target'} file
+          File name for the {role} file
         </Label>
         <Input
           id={`name-${id}`}
-          className="h-7 w-auto max-w-[60%] border-transparent bg-transparent px-1 font-mono text-[13px] font-medium hover:border-input focus-visible:border-ring"
+          ref={nameRef}
+          className="h-7 w-auto min-w-0 flex-shrink border-transparent bg-transparent px-1 font-mono text-[13px] font-medium shadow-none hover:border-input focus-visible:border-ring"
           value={name}
           onChange={(event) => onName(event.target.value)}
+          onFocus={(event) => event.currentTarget.select()}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === 'Escape') event.currentTarget.blur();
+          }}
+          placeholder={isReference ? '.env.example' : '.env'}
+          aria-describedby={`name-hint-${id}`}
           spellCheck={false}
           autoComplete="off"
-          size={Math.max(name.length, 10)}
+          style={{ width: `${Math.max(name.length, 8) + 1}ch` }}
         />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-6 shrink-0 text-faint hover:text-foreground"
+          aria-label={`Rename the ${role} file`}
+          title="Rename this file"
+          onClick={() => {
+            nameRef.current?.focus();
+            nameRef.current?.select();
+          }}
+        >
+          <Pencil aria-hidden="true" />
+        </Button>
+        <span className="sr-only" id={`name-hint-${id}`}>
+          You can type a different file name, such as .env.production.
+        </span>
         {isReference ? (
-          <span className="rounded-sm border border-differs/25 bg-differs-tint px-1.5 py-0.5 text-[11px] font-medium text-differs">
+          <span className="ml-auto shrink-0 rounded-sm border border-differs/25 bg-differs-tint px-1.5 py-0.5 text-[11px] font-medium text-differs">
             reference
           </span>
-        ) : null}
-        <span className="flex-1" />
+        ) : (
+          <span className="ml-auto shrink-0 text-[11px] text-faint">target</span>
+        )}
       </div>
 
       <Textarea
-        className="min-h-[220px] flex-1 rounded-none border-0 bg-transparent px-3 py-2.5 font-mono text-[12.5px] leading-relaxed focus-visible:ring-0"
+        id={`text-${id}`}
+        className="min-h-[220px] flex-1 rounded-none border-0 bg-transparent px-3 py-2.5 font-mono text-[12.5px] leading-relaxed shadow-none focus-visible:ring-0"
         value={text}
-        onChange={(event) => onText(event.target.value)}
-        placeholder={isReference ? 'Paste your .env.example here' : 'Paste your .env here'}
+        onChange={(event) => {
+          const next = event.target.value;
+          if (pasting.current) {
+            pasting.current = false;
+            onPaste(next);
+          } else {
+            onText(next);
+          }
+        }}
+        onPaste={() => {
+          pasting.current = true;
+        }}
+        placeholder={
+          isReference
+            ? 'Paste your .env.example here, or drop the file'
+            : 'Paste your .env here, or drop the file'
+        }
         spellCheck={false}
         autoComplete="off"
         autoCapitalize="off"
@@ -123,9 +201,10 @@ export function FilePane({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-6 px-2 text-[12px]"
+          className="h-6 gap-1 px-1.5 text-[12px]"
           onClick={() => pickerRef.current?.click()}
         >
+          <Upload aria-hidden="true" />
           Choose file
         </Button>
         {text ? (
@@ -133,22 +212,31 @@ export function FilePane({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-6 px-2 text-[12px]"
+            className="h-6 gap-1 px-1.5 text-[12px]"
             onClick={() => onText('')}
           >
+            <X aria-hidden="true" />
             Clear
           </Button>
         ) : null}
         <input
           ref={pickerRef}
           type="file"
-          accept=".env,text/plain"
+          accept=".env,.env.*,text/plain"
           onChange={handlePick}
           className="sr-only"
           tabIndex={-1}
           aria-hidden="true"
         />
       </div>
+
+      {dragging ? (
+        <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-lg bg-brand-soft/85 text-primary backdrop-blur-[1px]">
+          <FileUp className="size-6" aria-hidden="true" />
+          <p className="text-[13px] font-semibold">Drop to replace {name || 'this file'}</p>
+          <p className="text-[11.5px] text-primary/80">Nothing is uploaded — the file is read here.</p>
+        </div>
+      ) : null}
     </div>
   );
 }

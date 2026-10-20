@@ -14,14 +14,15 @@ describe('result views', () => {
     render(<Tool />);
     await user.click(screen.getByRole('button', { name: 'See an example' }));
 
-    const summary = screen.getByRole('tab', { name: /Summary/ });
-    expect(summary).toHaveAttribute('aria-selected', 'true');
-
-    summary.focus();
-    await user.keyboard('{ArrowRight}');
+    // The table is the default view: it is where the work happens.
     const table = screen.getByRole('tab', { name: /Table/ });
     expect(table).toHaveAttribute('aria-selected', 'true');
-    expect(table).toHaveFocus();
+
+    table.focus();
+    await user.keyboard('{ArrowRight}');
+    const raw = screen.getByRole('tab', { name: /Raw/ });
+    expect(raw).toHaveAttribute('aria-selected', 'true');
+    expect(raw).toHaveFocus();
 
     await user.keyboard('{End}');
     expect(screen.getByRole('tab', { name: /Fix/ })).toHaveAttribute('aria-selected', 'true');
@@ -32,7 +33,7 @@ describe('result views', () => {
     render(<Tool />);
     await user.click(screen.getByRole('button', { name: 'See an example' }));
 
-    const tab = screen.getByRole('tab', { name: /Summary/ });
+    const tab = screen.getByRole('tab', { name: /Table/ });
     const panel = screen.getByRole('tabpanel');
     expect(tab).toHaveAttribute('aria-controls', panel.id);
   });
