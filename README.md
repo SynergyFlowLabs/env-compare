@@ -1,12 +1,34 @@
+<div align="center">
+
+<img src="docs/assets/banner.svg" alt="EnvCompare: see what your .env is missing. A dark card with the product mark, the headline, and a miniature of the comparison table showing keys marked Match, Missing, Placeholder, Different and Extra." width="100%">
+
 # EnvCompare
 
 **See what your `.env` is missing — without your secrets leaving the browser.**
 
-**[envcompare.vercel.app](https://envcompare.vercel.app)** · no install, no account, one page.
+[![Tests](docs/assets/badges/tests.svg)](https://github.com/SynergyFlowLabs/env-compare/actions/workflows/ci.yml)
+[![License](docs/assets/badges/license.svg)](LICENSE)
+[![Privacy](docs/assets/badges/privacy.svg)](docs/PRIVACY.md)
+[![Files](docs/assets/badges/files.svg)](#features)
+[![Runtime deps](docs/assets/badges/deps.svg)](CONTRIBUTING.md#privacy-invariants-not-negotiable)
+[![Node](docs/assets/badges/node.svg)](#quick-start)
 
-Paste `.env.example` and `.env` — add `.env.local`, `.env.staging`, `.env.production` if you keep them. EnvCompare shows every variable that is missing, empty, still a placeholder, or leftover in each file, and hands you the exact block to paste back.
+[**Open the app**](https://envcompare.vercel.app) · [Privacy model](docs/PRIVACY.md) · [PRD](docs/PRD.md) · [Design](docs/DESIGN.md) · [Contributing](CONTRIBUTING.md)
 
-No upload. No account. No storage. No analytics.
+</div>
+
+---
+
+AI agents are designed **not** to touch `.env` files, so they write `.env.example` instead and you fill in the real file by hand. Then the project grows, the example gains keys, your `.env` quietly drifts behind it, and nothing warns you until the app dies with a `401`.
+
+A `diff` cannot help. It compares lines, not variables, and says nothing about the two failures that hurt most:
+
+```bash
+OPENAI_API_KEY=          # defined, but empty       → fails at runtime
+OPENAI_API_KEY=changeme  # still the example value → fails at runtime
+```
+
+Both pass a naive "does this key exist?" check. EnvCompare doesn't.
 
 ```
 .env.example                   .env
@@ -20,30 +42,20 @@ RESEND_API_KEY    re_…      ✓   RESEND_API_KEY    re_OLD…   ≠
 ⊘ missing   ✎ placeholder   ⫽ commented out   ✓ set   ≠ set differently
 ```
 
-## The problem
+Paste your files, read the summary, fix the table, copy the block. Everything happens in one tab; close it and the data is gone, because it was never written anywhere.
 
-AI code editors and agents are deliberately designed **not** to touch `.env` files. So they write a `.env.example` instead, and you fill in the real file by hand.
+## Features
 
-Then the project grows. The agent adds keys to `.env.example`; your `.env` quietly drifts behind it. Nothing warns you. The app breaks later with a `401`, a blank page, or a database error, and the cause is one line missing from a file you were told not to worry about.
-
-A `diff` does not help. It compares lines, not variables, and it says nothing about the two failures that hurt most:
-
-```bash
-OPENAI_API_KEY=          # defined, but empty       → fails at runtime
-OPENAI_API_KEY=changeme  # still the example value → fails at runtime
-```
-
-Both pass a naive "does this key exist?" check.
-
-## What it does
-
-- **Compares two or more** env files against a reference, usually `.env.example`: `.env`, `.env.local`, `.env.staging`, `.env.production`, up to eight boxes.
-- **Classifies** every variable in every file: missing · empty · placeholder · commented out · set · set differently.
-- **Shows four views:** a plain-language summary, a row-aligned table with inline editing, the annotated raw text, and a copy-ready fix.
-- **Gives you the fix**, not just the diagnosis: `Copy 3 variables for .env`.
-- **Stays safe with real secrets:** mask values in one click; reports contain key names only. The only thing this site can remember is your theme, and only with your consent.
-
-Everything happens in a single tab. Close it and the data is gone, because it was never written anywhere.
+| | |
+| --- | --- |
+| **Six states, not a diff** | Every variable in every file is `missing` · `empty` · `placeholder` · `commented out` · `set` · `set differently`. Each state has a colour, an icon *and* a word, so colour is never the only signal. |
+| **Two to eight files** | One reference (auto-detected by name, or pinned from any box) and N targets. The table grows a column per file; the fix panel acts on the file you are looking at. |
+| **Four views** | A plain-language **Summary**, a row-aligned **Table** (default) with inline editing, the annotated **Raw** text, and the copy-ready **Fix**. |
+| **You get the fix, not the diagnosis** | `Copy 3 variables for .env` produces a block with blank values, ready to paste. Exports never contain a value. |
+| **Safe with real secrets** | One click hides values — and removes them from the DOM rather than covering them with CSS. Reports and agent prompts are keys-only by default. |
+| **Honest placeholders** | `changeme`, `your-api-key`, `<your-key>` and `sk_test_xxxx` are placeholders. `test`, `dummy`, `localhost`, `example` and `password` are not: they appear in real values too often. |
+| **Accessible** | Full keyboard path, skip link, visible focus, labelled inputs, real table semantics, and dialogs that trap and restore focus. |
+| **No network, no storage** | Static page, no backend, `connect-src 'none'`, no `localStorage`/`sessionStorage`/`IndexedDB`, no analytics. One opt-in cookie holds a theme and nothing else. |
 
 ## Quick start
 
@@ -54,87 +66,118 @@ npm install
 npm run dev            # http://localhost:5173
 ```
 
-Requires Node 22.
+Requires **Node 22+**. No API keys, no database, no services.
 
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Vite dev server |
-| `npm test` | Unit and component tests (vitest + Testing Library) |
-| `npm run build` | Typecheck, then production build to `dist/` |
+| `npm test` | Unit and component tests (Vitest + Testing Library) |
+| `npm run build` | Typecheck, then a production build to `dist/` |
 | `npm run preview` | Serve the production build |
-| `npm run privacy` | The privacy guard (see below) |
-| `npm run test:e2e` | Playwright suite; needs `npx playwright install` first |
+| `npm run privacy` | The privacy guard: storage, network, dependency and CSP rules |
+| `npm run test:e2e` | Playwright suite (run `npx playwright install` first) |
 | `npm run check` | Tests, build and guard — what CI runs |
-
-UI components are [shadcn/ui](https://ui.shadcn.com) source, copied into `src/ui/components/ui` rather than pulled from a package. Tailwind v4 and Radix are the only additions to the front end; the palette still comes from [tokens.css](src/styles/tokens.css), so light and dark stay one source of truth.
+| `node scripts/build-badges.mjs` | Regenerate the badges in `docs/assets/badges` |
 
 ## How the guarantees are enforced
 
-The privacy promise is not a paragraph in a policy. Each claim has a mechanism, and each mechanism has a test:
+The privacy claim is not a paragraph in a policy document. Every promise has a mechanism, and every mechanism has a test.
 
 | Promise | Mechanism |
 | --- | --- |
-| Nothing is uploaded | Static site, no backend. Production CSP sets `connect-src 'none'`. |
-| Your files are never stored | No `localStorage`, `sessionStorage`, `IndexedDB`, cache or service worker, and no cookie ever holds anything you paste. `npm run privacy` fails the build if any of those APIs appears in `src/`. |
-| One cookie, only if you ask | Choosing Light or Dark once asks whether it may remember the choice in a single cookie, `ec-theme`, whose value is one word. Decline and nothing is written; the guard confines cookie access to one audited file. |
-| No third-party code that reports back | Runtime dependencies are a short, reviewed allowlist (React, Radix primitives for the dialog and tabs, and four small utilities) checked by CI. No fonts CDN, no analytics, no tag manager, no error reporter. |
-| No shareable links | No URL or hash state, so file content can never reach a link, a history entry, or a screenshot of the address bar. |
+| Nothing is uploaded | Static site, no backend or functions. The production CSP sets `connect-src 'none'`, so the browser refuses any request the page could attempt. |
+| Your files are never stored | No `localStorage`, `sessionStorage`, `IndexedDB`, cache or service worker, and no cookie ever holds anything you paste. `npm run privacy` fails the build if one of those APIs appears in `src/`. |
+| One cookie, only if you ask | Choosing Light or Dark once asks whether it may remember the choice in `ec-theme`, whose value is one word. Decline and nothing is written; the guard confines cookie access to one audited file and checks its `SameSite`, `Path` and `Max-Age`. |
+| No third-party code that reports back | Runtime dependencies are a short reviewed allowlist — React, three Radix primitives and four small utilities — checked in CI. No font CDN, analytics, tag manager or error reporter. |
+| No shareable links | No URL or hash state, so a file name or value can never reach browser history, a screenshot of the address bar, or a `Referer` header. |
 | Masking is real | Masked values are removed from the DOM, not hidden with CSS. |
 | Exports are safe | Fix blocks, agent prompts and default reports contain key names only. |
 
-Verify it yourself in about thirty seconds: open DevTools → Network, use the tool, and watch nothing go out. Then check Application → Storage: Local Storage, Session Storage and IndexedDB are empty, and the only cookie — if you said yes — is `ec-theme`.
+Verify it yourself in about thirty seconds: open DevTools → Network, clear it, use the tool, watch nothing go out. Then check Application → Storage: Local Storage, Session Storage and IndexedDB are empty, and the only cookie — if you said yes — is `ec-theme`.
 
-The reasoning, the threat model, and the things we explicitly cannot protect you from (extensions, your clipboard, your screen) are in [docs/PRIVACY.md](docs/PRIVACY.md).
+The threat model, and the things this tool explicitly cannot protect you from (browser extensions, your clipboard, a screen recording, someone with your unlocked device) are in [docs/PRIVACY.md](docs/PRIVACY.md). The reasoning and the amendments are recorded in [PRD §13](docs/PRD.md#13-privacy-and-security-architecture).
 
 ## How it decides
 
 Correctness is the whole product. A false "you're missing something" teaches people to ignore the tool.
 
-- **Parsing matches `dotenv`.** Quotes, `export` prefixes, `#` comments, duplicate keys, multi-line values, CRLF and BOM are parsed the way `dotenv.parse()` parses them, and a conformance test asserts it against every fixture. Where we deliberately differ, we say so in [PRD §12](docs/PRD.md#12-parsing-and-comparison-specification-normative).
-- **Six states, one per cell.** Missing, empty, placeholder, commented out, set, set differently. The reference file's own state matters: a key that is commented out in `.env.example` is reported differently from one that was deleted.
-- **Only high-confidence placeholders count.** `changeme`, `your-api-key`, `<your-key>`, `sk_test_xxxxxxxxxxxx` do. `test`, `dummy`, `localhost`, `example` and `password` do not: they appear in real values too often. A real JWT is never a placeholder.
+- **Parsing matches `dotenv`.** Quotes, `export` prefixes, `#` comments, duplicate keys, multi-line values, CRLF and BOM are parsed the way `dotenv.parse()` parses them, asserted against 32 fixtures. Where we deliberately differ, [PRD §12](docs/PRD.md#12-parsing-and-comparison-specification-normative) says so.
+- **Row order is stable.** The reference file's order first, then keys that only targets have, in the order they appear.
 - **The fix is a surgical patch.** Edits splice the original text, so comments, ordering and quoting survive untouched. Nothing is reformatted.
+- **Values never leave unasked.** Comparison happens locally; only the cell you reveal renders a value.
 
-## Accessibility
+## Tech stack
 
-Keyboard path for every action (starting with a skip link), a Light / Dark / Auto theme control that needs no storage, visible focus, labels on every input, colour never the only signal (each state has a glyph and a word), and dialogs that trap and restore focus. If you find a case that fails, it is a bug; please report it.
+- **React 19** + **TypeScript**, built with **Vite**
+- **Tailwind CSS v4** with a hand-written palette ([`tokens.css`](src/styles/tokens.css)) — light and dark from one source of truth
+- **shadcn/ui** components copied into [`src/ui/components/ui`](src/ui/components/ui) rather than pulled from a package
+- **Radix** primitives for dialog and tabs; **lucide** for icons
+- **Vitest** + Testing Library for unit and component tests, **Playwright** for the browser suite
+- **No backend.** Deploys as static files to Vercel; `vercel.json` carries the CSP, cache and rewrite rules
 
-## Contributing
-
-Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
-
-- The most valuable contribution is a **parser edge case** with a minimal, fake-value reproduction. It becomes a permanent fixture.
-- The [PRD's non-goals](docs/PRD.md) are constitutional: PRs that add analytics, storage, accounts, or a backend will be declined regardless of quality.
-- **Never paste real secrets into an issue.** Use obvious placeholders.
-
-Good first issues are labelled [`good first issue`](https://github.com/SynergyFlowLabs/env-compare/labels/good%20first%20issue).
-
-## Repository layout
+## Project layout
 
 ```
-src/core/            parsing, comparison, patches, exporters — pure TypeScript, no DOM
-src/state/           one reducer, no persistence
-src/ui/components/   product components
-src/ui/components/ui shadcn/ui primitives (button, card, dialog, tabs, table…)
-src/styles/          tokens.css (the palette) + Tailwind theme
-components.json      shadcn configuration
-docs/PRD.md     the specification, written before the code
-docs/DESIGN.md  palette, type, layout, motion, copy
-docs/PRIVACY.md the long version of the privacy claim
-e2e/            Playwright: no-network, no-storage, masked-DOM, hostile-storage
-tests/          365 unit and component tests, 32 parser fixtures
-AGENTS.md       conventions for humans and AI agents
-PROGRESS.md     build log and decisions
+src/core/             parsing, comparison, patches, exporters — pure TypeScript, no DOM
+src/state/            one reducer, no persistence
+src/ui/components/    product components
+src/ui/components/ui  shadcn/ui primitives (button, card, dialog, tabs, table…)
+src/styles/           tokens.css (the palette) + the Tailwind theme
+components.json       shadcn configuration
+docs/PRD.md           the specification, written before the code
+docs/DESIGN.md        palette, type, layout, motion, copy
+docs/PRIVACY.md       the long version of the privacy claim
+docs/assets/          banner and generated README badges
+e2e/                  Playwright: no-network, no-storage, masked-DOM, hostile-storage
+tests/                unit and component tests, plus parser fixtures
+scripts/              privacy guard, badge generator
+AGENTS.md             conventions for humans and AI agents
+PROGRESS.md           build log and the decisions behind it
 ```
+
+## Testing
+
+```bash
+npm test           # 389 unit and component tests
+npm run check      # + typecheck, production build, privacy guard
+npm run test:e2e   # Playwright, against a production build
+```
+
+The suite covers the parser against real-world `.env` shapes, the comparison and export invariants (no value may ever appear in a fix block or a report), every component flow — including a three-file comparison end to end — the theme cookie's consent rules, the metadata and social preview assets, and the privacy guard itself, including negative tests that prove it fails when it should.
 
 ## Roadmap
 
 | Version | Scope |
 | --- | --- |
-| **v1.0** ✅ | Reference auto-detection · six-state classification · **N-file matrix (2–8 files)** · summary, table, raw and fix views · inline editing · add/remove/uncomment with undo · masking · redacted report · copy/download · privacy guard |
+| **v1.0** ✅ | Reference auto-detection · six-state classification · 2–8 files · summary, table, raw and fix views · inline editing · add/remove/uncomment with undo · masking · redacted report · copy/download · privacy guard |
 | **v1.1** | Framework presets (Next.js, Vite, Docker Compose) · richer `# required` annotations |
-| **v2 (if demanded)** | Shared core as a CLI · a GitHub Action for `.env.example` drift |
+| **v2** *(if demanded)* | Shared core as a CLI · a GitHub Action that reports `.env.example` drift in pull requests |
+
+Ideas and votes live in [Issues](https://github.com/SynergyFlowLabs/env-compare/issues).
+
+## Contributing
+
+Contributions are welcome — start with [CONTRIBUTING.md](CONTRIBUTING.md).
+
+- The most valuable contribution is a **parser edge case** with a minimal, fake-value reproduction. It becomes a permanent fixture.
+- The [non-goals](docs/PRD.md) are constitutional: PRs that add analytics, storage, accounts or a backend will be declined regardless of quality.
+- **Never paste a real secret into an issue or a PR.** Use obvious placeholders.
+- Small, focused pull requests get reviewed fastest; `npm run check` must be green.
+
+Good first issues are labelled [`good first issue`](https://github.com/SynergyFlowLabs/env-compare/labels/good%20first%20issue).
+
+## Contributors
+
+<a href="https://github.com/SynergyFlowLabs/env-compare/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=SynergyFlowLabs/env-compare" alt="Contributors to EnvCompare" width="120">
+</a>
+
+Built and maintained by [**imgul**](https://github.com/imgul). The full list is in the [contributors graph](https://github.com/SynergyFlowLabs/env-compare/graphs/contributors).
 
 ## License
 
-MIT — see [LICENSE](LICENSE). The parser is modelled on [dotenv](https://github.com/motdotla/dotenv) (BSD-2-Clause); attribution is in the license file.
+[MIT](LICENSE). The parser is modelled on [dotenv](https://github.com/motdotla/dotenv) (BSD-2-Clause); attribution is in the license file.
+
+<div align="center">
+<sub>Built for the moment an agent hands you a <code>.env.example</code> and says "you're all set."</sub>
+</div>

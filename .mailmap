@@ -1,0 +1,11 @@
+# One human, one identity.
+#
+# The project was built in pairing sessions where commits were authored by
+# "Gul Zaib <zaibg0375@gmail.com>" or by an automation account. Both are the
+# maintainer's work, so they are folded into the address GitHub links to the
+# @imgul profile. `git shortlog -sne` and editors that honour .mailmap now show
+# a single contributor instead of three.
+imgul <92777653+imgul@users.noreply.github.com> <zaibg0375@gmail.com>
+imgul <92777653+imgul@users.noreply.github.com> <298482267+arena-ai-coding-agent[bot]@users.noreply.github.com>
+imgul <92777653+imgul@users.noreply.github.com> <297053741+arena-agent@users.noreply.github.com>
+imgul <92777653+imgul@users.noreply.github.com>
