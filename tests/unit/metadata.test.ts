@@ -214,6 +214,13 @@ describe('crawler files', () => {
     }
     // Documents stay same-origin: nothing should be able to frame or embed the app.
     expect(value('/(.*)', 'Cross-Origin-Resource-Policy')).toBe('same-origin');
+
+    // Order matters: Vercel merges every matching header rule and the LAST value
+    // for a repeated key wins. With the catch-all after the assets, its
+    // same-origin silently overwrote them — which is exactly what happened.
+    const sources = vercel.headers.map((rule) => rule.source);
+    expect(sources.indexOf('/(.*)')).toBeLessThan(sources.indexOf('/og-image.png'));
+    expect(sources.indexOf('/(.*)')).toBeLessThan(sources.indexOf('/favicon.ico'));
   });
 
   it('keeps the CSP untouched by the metadata work', () => {
