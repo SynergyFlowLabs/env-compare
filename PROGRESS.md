@@ -196,6 +196,28 @@ Five changes, four small and one that was a real defect.
 column header, drop loads a file, the table is selected first, the editor survives 30ms, Compare returns,
 and a fresh paste advances again.
 
+### 2026-10-20 — The agent prompt copies and explains itself
+
+"Copy prompt for my agent" now does both things at once: it puts the prompt on the clipboard **and**
+opens a dialog showing it, because a click that says "copy" should copy, but the reader also deserves to
+see what they are about to hand an agent.
+
+- The dialog states what actually happened: *Copied to your clipboard* or *Your browser blocked the
+  clipboard* — never a claim the browser refused to honour. `copied` lives in the reducer, not in local
+  component state, so the dialog can be honest across renders.
+- It carries its own **Copy prompt** button, which re-copies and toasts, so the dialog is not a dead end
+  once the status line has faded from memory.
+- When the copy was refused it **selects the text**, so a single ⌘C / Ctrl+C finishes the job. This took
+  three attempts: an effect had no element yet (Radix mounts dialog content a commit later), and selecting
+  before Radix moves focus is silently undone, so the selection is made from the ref callback on a
+  deferred tick. The test asserts the range, not `Selection.toString()` — jsdom does not serialise
+  selections, which is exactly the kind of "green test, broken feature" trap worth writing down.
+- Toasts gained `z-[60]`: a toast that renders under the modal it was caused by is a toast nobody sees.
+- The privacy e2e suite now exercises the dialog and asserts the dialog and copy still make zero requests.
+
+**331 tests.** Four new: copies-and-shows in one click, copies again from inside the dialog, reports a
+blocked clipboard instead of success, and closes cleanly.
+
 ---
 
 ## Decisions made during implementation
@@ -220,6 +242,7 @@ and a fresh paste advances again.
 | 2026-10-20 | Tokens stay the only colour source; shadcn's semantic names are mapped onto them | Otherwise two palettes drift and the contrast test stops covering what ships |
 | 2026-10-20 | shadcn components are vendored, not installed as a design-system package | They are source here; upgrading is a deliberate diff, not a lockfile change |
 | 2026-10-20 | Line icons replace the typographic state glyphs | The glyphs depended on the reader's font and drifted in weight; the icon+word rule they served is unchanged |
+| 2026-10-20 | The agent prompt opens a dialog as well as copying | The prompt is the one export that leaves the tab (pasted into an agent); the reader should see it, and a blocked clipboard needs somewhere to fall back to |
 | 2026-10-20 | Auto-advance is a state flag, not a derived condition | "Both files have keys" is not the same as "the reader wants the results"; conflating them made the editor unusable |
 | 2026-10-20 | The six comparison states keep their own Tailwind names | `destructive` cannot express "commented out", and collapsing states into one red loses the information the product exists to show |
 

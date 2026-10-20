@@ -16,6 +16,12 @@ test('no request is made after the page loads', async ({ page }) => {
   await page.getByRole('tab', { name: /Fix/ }).click();
   await page.getByRole('button', { name: /Copy/ }).first().click();
 
+  // The agent prompt opens a dialog *and* copies; neither may leave the page.
+  await page.getByRole('button', { name: 'Copy prompt for my agent' }).click();
+  await expect(page.getByRole('dialog')).toContainText('Prompt for your agent');
+  await page.getByRole('button', { name: 'Copy prompt' }).click();
+  await page.getByRole('button', { name: 'Done' }).click();
+
   expect(requests).toEqual([]);
 });
 

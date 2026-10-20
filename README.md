@@ -119,7 +119,7 @@ docs/PRD.md     the specification, written before the code
 docs/DESIGN.md  palette, type, layout, motion, copy
 docs/PRIVACY.md the long version of the privacy claim
 e2e/            Playwright: no-network, no-storage, masked-DOM, hostile-storage
-tests/          326 unit and component tests, 32 parser fixtures
+tests/          331 unit and component tests, 32 parser fixtures
 AGENTS.md       conventions for humans and AI agents
 PROGRESS.md     build log and decisions
 ```
