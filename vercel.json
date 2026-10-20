@@ -10,36 +10,79 @@
   "headers": [
     {
       "source": "/og-image.png",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" }]
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
     },
     {
       "source": "/apple-touch-icon.png",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" }]
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
     },
     {
       "source": "/icon-192.png",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" }]
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
     },
     {
       "source": "/icon-512.png",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" }]
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
+    },
+    {
+      "source": "/favicon.ico",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
+    },
+    {
+      "source": "/favicon-16x16.png",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
+    },
+    {
+      "source": "/favicon-32x32.png",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
     },
     {
       "source": "/favicon.svg",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" }]
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
     },
     {
       "source": "/robots.txt",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" }]
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
     },
     {
       "source": "/sitemap.xml",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" }]
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
     },
     {
       "source": "/site.webmanifest",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" },
         { "key": "Content-Type", "value": "application/manifest+json" }
       ]
     },
