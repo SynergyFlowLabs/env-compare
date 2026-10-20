@@ -6,6 +6,7 @@ import { countLines } from '../../core/parse';
 import { reducer, initialState } from '../../state/reducer';
 import { copyText, downloadText, safeFileName } from '../lib/clipboard';
 import { FilePane } from '../components/FilePane';
+import { SiteHeader } from '../components/SiteHeader';
 import { SkipLink } from '../components/SkipLink';
 import { SummaryLine } from '../components/SummaryLine';
 import { CompareTable, type Filter } from '../components/CompareTable';
@@ -14,7 +15,6 @@ import { FixPanel } from '../components/FixPanel';
 import { Diagnostics } from '../components/Diagnostics';
 import { Toast } from '../components/Toast';
 import { Dialog } from '../components/Dialog';
-import { PrivacyBadge, Wordmark } from '../components/Brand';
 
 const TABS = [
   { id: 'summary', label: 'Summary' },
@@ -108,7 +108,7 @@ export function Tool() {
   return (
     <div className="shell">
       <SkipLink />
-      <Header />
+      <SiteHeader current="tool" />
 
       <main className="shell__main" id="main" tabIndex={-1}>
         {state.view === 'input' || !bothHaveKeys ? (
@@ -510,22 +510,6 @@ function CopyFallback({
       <p>{label}. Select the text below and copy it with your keyboard.</p>
       <textarea readOnly value={text} autoFocus onFocus={(event) => event.currentTarget.select()} />
     </Dialog>
-  );
-}
-
-function Header() {
-  return (
-    <header className="header">
-      <div className="header__inner">
-        <Wordmark />
-        <span className="header__spacer" />
-        <nav className="header__nav" aria-label="About this tool">
-          <a href="/privacy">Privacy</a>
-          <a href="/about">About</a>
-        </nav>
-        <PrivacyBadge />
-      </div>
-    </header>
   );
 }
 

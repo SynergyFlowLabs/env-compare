@@ -1,4 +1,4 @@
-import { Wordmark } from '../components/Brand';
+import { SiteHeader } from '../components/SiteHeader';
 import { SkipLink } from '../components/SkipLink';
 
 const SOURCE = 'https://github.com/SynergyFlowLabs/env-compare';
@@ -7,16 +7,7 @@ export function Privacy() {
   return (
     <div className="shell">
       <SkipLink />
-      <header className="header">
-        <div className="header__inner">
-          <Wordmark />
-          <span className="header__spacer" />
-          <nav className="header__nav" aria-label="Site">
-            <a href="/">Tool</a>
-            <a href="/about">About</a>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader current="privacy" />
 
       <main className="shell__main" id="main" tabIndex={-1}>
         <article className="page">
@@ -47,7 +38,8 @@ export function Privacy() {
               <span>
                 <strong>Nothing is stored.</strong> No <code>localStorage</code>, no{' '}
                 <code>sessionStorage</code>, no <code>IndexedDB</code>, no cookies, no service
-                worker. A check in CI fails the build if any of those appear in the source.
+                worker. A check in CI fails the build if any of those appear in the source. Even
+                your theme choice lives in memory only, so it resets when you reload.
               </span>
             </li>
             <li>

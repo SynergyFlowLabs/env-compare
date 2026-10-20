@@ -23,16 +23,32 @@ The comparison table is the product. Everything else gets out of its way.
 | `--surface` | `#FFFFFF` | `#171A1F` | panels, table |
 | `--ink` | `#15181C` | `#E8E9E6` | primary text |
 | `--ink-soft` | `#5A616B` | `#A0A6AF` | secondary text |
+| `--ink-faint` | `#666C75` | `#858D97` | metadata, line numbers |
 | `--line` | `#D7D8D2` | `#2A2E35` | rules, borders |
 | `--accent` | `#2C46C8` | `#7D93FF` | focus, links, primary action |
 | `--st-missing` | `#C0392F` | `#FF8A7A` | error / missing |
 | `--st-empty` | `#9A5B00` | `#F3B95F` | set but empty |
 | `--st-placeholder` | `#6B4FA1` | `#C3A6FF` | still the example value |
-| `--st-commented` | `#6A6F76` | `#9AA0A8` | commented out |
+| `--st-commented` | `#666B72` | `#9AA0A8` | commented out |
 | `--st-ok` | `#2F6B4F` | `#6FD3A0` | set |
 | `--st-differs` | `#1F6F8B` | `#7DD3E8` | different value |
 
 Each state also has a `-tint` (background wash) and is paired with a glyph: `⊘` missing, `!` empty, `✎` placeholder, `⫽` commented, `✓` set, `≠` different.
+
+Text drawn *on* a filled colour is not white in both themes: `--on-accent` and `--on-state` flip to near-black in dark mode, where the fills are pastel and `#fff` would sit at roughly 2:1. Every text/background pair in this table is asserted against WCAG AA (4.5:1) by `tests/unit/tokens.test.ts`.
+
+### Theme selection
+
+Three explicit choices in the header — **Auto** (follow the OS, the default), **Light**, **Dark** — as segmented buttons with `aria-pressed`. Not a two-state toggle, because "follow my OS" is a real preference that a toggle silently discards.
+
+The choice lives in memory for the life of the tab and is never written to storage or the URL; reloading returns to Auto. That is not an oversight, it is the same rule that keeps file contents out of storage.
+
+Mechanically the choice is one attribute, `data-theme` on `<html>`:
+
+- absent → `prefers-color-scheme` decides (Auto);
+- `light` / `dark` → force it, even against a dark OS.
+
+CSS cannot express "dark, unless the reader chose light" in a single rule without repeating the declarations, so the dark palette is written twice in `tokens.css`. A test parses the file and fails if the two blocks drift.
 
 ## Type
 

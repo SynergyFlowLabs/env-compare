@@ -47,7 +47,7 @@ Each of these was considered and rejected because it would require knowing somet
 ## Trade-offs we accept
 
 - **Nothing survives a reload.** If you compare three files and then refresh, you start again. This is the price of the guarantee, and it is not negotiable.
-- **No theme that persists.** Dark mode follows your operating system's preference, read per render, never stored.
+- **The theme choice does not persist.** There is a Light / Dark / Auto control in the header, and it is held in memory only. A site that remembers your preference is a site that writes to your disk on first visit; this one does not, so it forgets, and "Auto" (follow the operating system) is the default. The setting is also excluded from the URL, like everything else.
 - **Undo is per session.** The history lives in memory and disappears with the tab.
 
 ## What we cannot protect you from
