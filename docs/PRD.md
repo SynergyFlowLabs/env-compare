@@ -1411,7 +1411,7 @@ Expected result (this exact case is a golden test):
 | --- | --- | --- | --- | --- |
 | `DATABASE_URL` | present | present | matching | identical |
 | `NEXT_PUBLIC_SUPABASE_URL` | present | present | different | a different host |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | present | present | different | a real JWT replaced the example value |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | placeholder | present | matching | a real JWT replaced the example value — success, not a "difference" |
 | `SUPABASE_SERVICE_ROLE_KEY` | present | placeholder | needs a value (warning) | `changeme` was copied straight across |
 | `STRIPE_SECRET_KEY` | present | absent | **missing (error)** | never added to `.env` |
 | `STRIPE_WEBHOOK_SECRET` | empty | empty | needs a value (error) | present but empty in both |
@@ -1420,6 +1420,8 @@ Expected result (this exact case is a golden test):
 | `LEGACY_GA_ID` | absent | present | only in `.env` (info) | a leftover from an older version of the project |
 
 Summary copy for this case: *"2 variables are in `.env.example` but missing from `.env`. 2 need a value. 1 is only in `.env`."* — plus one "Commented out" row available under the info filter, which is deliberately **not** counted as a problem.
+
+Note the last row: a value that replaced an example placeholder counts as **matching**, not as "different". Calling it a difference would put noise on every row a user has correctly filled in, which is the fastest way to teach someone to ignore a report.
 
 What this fixture proves: a naive diff reports two missing keys and stops. It misses the copied-through `changeme`, misses that `STRIPE_WEBHOOK_SECRET` is empty, and wrongly shouts about `SENTRY_DSN`. That gap is the product.
 

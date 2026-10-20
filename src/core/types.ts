@@ -67,8 +67,12 @@ export interface ParsedFile {
   occurrences: VarOccurrence[];
   /** Effective occurrence per key: the last assignment wins (dotenv semantics). */
   effective: Map<string, VarOccurrence>;
-  /** Keys that only appear commented out, e.g. `# SENTRY_DSN=`. */
-  commentedKeys: Set<string>;
+  /**
+   * Keys that only appear commented out, e.g. `# SENTRY_DSN=`, mapped to the
+   * line where they first appear. A Map (not a Set) so the reference file's
+   * commented keys keep their source order in the table.
+   */
+  commentedKeys: Map<string, number>;
   /** First-appearance order of effective keys. */
   order: string[];
   diagnostics: Diagnostic[];

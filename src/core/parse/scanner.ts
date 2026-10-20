@@ -16,7 +16,7 @@ export function emptyParsedFile(fileId: string): ParsedFile {
     fileId,
     occurrences: [],
     effective: new Map(),
-    commentedKeys: new Set(),
+    commentedKeys: new Map<string, number>(),
     order: [],
     diagnostics: [],
     stats: { lines: 0, bytes: 0, keyCount: 0, duplicateCount: 0 },
@@ -67,7 +67,7 @@ export function parseEnvFile(fileId: string, text: string): ParsedFile {
   const diagnostics: Diagnostic[] = [];
   const occurrences: VarOccurrence[] = [];
   const effective = new Map<string, VarOccurrence>();
-  const commentedKeys = new Set<string>();
+  const commentedKeys = new Map<string, number>();
   const order: string[] = [];
   /** Raw (newline-exclusive) ranges consumed by a successful match. */
   const covered: Array<[number, number]> = [];
@@ -183,7 +183,9 @@ export function parseEnvFile(fileId: string, text: string): ParsedFile {
       if (body === '') return;
       const commented = DOTENV_LINE_SINGLE.exec(body);
       const commentedKey = commented?.[1];
-      if (commentedKey) commentedKeys.add(commentedKey);
+      if (commentedKey && !commentedKeys.has(commentedKey)) {
+        commentedKeys.set(commentedKey, line.number);
+      }
       return;
     }
 

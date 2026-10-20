@@ -33,7 +33,7 @@ describe('fixture expectations', () => {
     const expected = expectations[name]!;
     const parsed = parseEnvFile('f', readFileSync(join(FIXTURE_DIR, name), 'utf8'));
     expect(parsed.order).toEqual(expected.keys);
-    expect([...parsed.commentedKeys]).toEqual(expected.commented);
+    expect([...parsed.commentedKeys.keys()]).toEqual(expected.commented);
     expect(parsed.diagnostics.map((d) => d.code)).toEqual(expected.diagnostics);
   });
 });
