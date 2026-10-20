@@ -308,6 +308,40 @@ two.
 
 **378 tests**, typecheck, build and guard green.
 
+### 2026-10-21 — Why the preview card "would not load"
+
+Third-party checkers scored the page 84/100 and drew an empty box where the card should be. The
+image URL itself was fine — `GET /og-image.png` returned `200`, `image/png`, 366 010 bytes, and the
+PNG decoded cleanly (1200×630, CRC valid, full pixel stream). The problem was one header:
+
+```
+Cross-Origin-Resource-Policy: same-origin
+```
+
+It came from the catch-all rule, which was written to stop anything embedding the app, and it also
+applied to the image. Browsers obey CORP on no-cors requests, which is exactly what `<img>` is, so
+every preview panel that renders the card in a browser — checkers, and Slack's and Discord's web
+clients — showed a broken image while `curl` said 200. A crawler fetching the image server-side never
+sees the header, which is why this survives a naive "is it 200?" check.
+
+Fix: static assets (`og-image.png`, icons, `robots.txt`, `sitemap.xml`, the manifest) now send
+`Cross-Origin-Resource-Policy: cross-origin`; documents keep `same-origin`, so nothing can frame the
+app. The lesson is recorded as a test: `tests/unit/metadata.test.ts` fails if the card's CORP header
+is anything but `cross-origin`, and fails if documents stop being `same-origin`.
+
+Two smaller scoring fixes from the same report:
+
+- **No `<h1>` in the served HTML.** The app renders one client-side, but crawlers and preview bots do
+  not run JavaScript, so the page had no heading at all. `index.html` now ships a visually hidden
+  `<h1>` inside `#root` — verified by test that React clears it on mount, so the rendered page still
+  has exactly one — plus a `<noscript>` explanation, which is the only honest answer for a tool that
+  cannot work without JavaScript.
+- **SVG-only favicon.** Google Search ignores SVG favicons. Added `favicon.ico` (16/32/48),
+  `favicon-16x16.png` and `favicon-32x32.png`, drawn from the same tile geometry, and linked them
+  ahead of the SVG. The test parses the ICO directory and checks every advertised size really exists.
+
+**382 tests**, typecheck, build and guard green.
+
 ## Decisions made during implementation
 
 | Date | Decision | Why |
