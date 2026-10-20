@@ -147,3 +147,16 @@ describe('Tool — raw view', () => {
     expect(screen.getByText(/# copied from the README/)).toBeInTheDocument();
   });
 });
+
+describe('Tool — keyboard entry point', () => {
+  it('offers a skip link that targets the main landmark', async () => {
+    const user = userEvent.setup();
+    render(<Tool />);
+    const skip = screen.getByRole('link', { name: 'Skip to content' });
+    expect(skip).toHaveAttribute('href', '#main');
+    // The target has to exist, or the link is decoration.
+    expect(document.getElementById('main')).toBeInTheDocument();
+    await user.tab();
+    expect(skip).toHaveFocus();
+  });
+});

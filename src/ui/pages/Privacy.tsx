@@ -1,10 +1,12 @@
 import { Wordmark } from '../components/Brand';
+import { SkipLink } from '../components/SkipLink';
 
 const SOURCE = 'https://github.com/SynergyFlowLabs/env-compare';
 
 export function Privacy() {
   return (
     <div className="shell">
+      <SkipLink />
       <header className="header">
         <div className="header__inner">
           <Wordmark />
@@ -16,7 +18,7 @@ export function Privacy() {
         </div>
       </header>
 
-      <main className="shell__main">
+      <main className="shell__main" id="main" tabIndex={-1}>
         <article className="page">
           <h1>Your file never leaves this tab</h1>
           <p>

@@ -21,7 +21,7 @@ Implementation tracker for EnvCompare. The plan comes from [docs/PRD.md](docs/PR
 | 8 | UI: summary + table (aligned, ghost cells, filters, states) | §10.3 | ✅ done |
 | 9 | UI: raw view, fix panel, report panel, masking | §10.3, §13.6 | ✅ done |
 | 10 | Privacy layer: CSP headers, CI guard script, `/privacy` page | §13 | ✅ done |
-| 11 | Component + e2e tests, a11y pass | §16 | ✅ 281 tests · e2e suites in CI · a11y pass done |
+| 11 | Component + e2e tests, a11y pass | §16 | ✅ 282 tests · e2e suites in CI · skip link + focus path |
 | 12 | Docs & launch artefacts: README demo, CONTRIBUTING, SECURITY, templates, LICENSE | §15 | ✅ done |
 
 ---
@@ -105,7 +105,7 @@ Privacy enforcement is now mechanical:
 - `vercel.json` sets the production CSP (`connect-src 'none'`, no third-party origins) plus `Referrer-Policy`, `Permissions-Policy`, COOP/CORP, HSTS.
 - `npm run privacy` fails the build on: storage/network/tracking APIs in `src/`, a runtime dependency outside `{react, react-dom}`, external `script`/`link`/`url()` in `dist`, inline scripts, and any network-capable API in the bundle.
 
-**281 tests green**, typecheck clean, bundle 86.5 kB gzip (18.3 kB app + 68.3 kB React), guard green.
+**281 tests green at the time of the UI commit**, typecheck clean, bundle 86.5 kB gzip (18.3 kB app + 68.3 kB React), guard green.
 
 Findings worth flagging to reviewers:
 
@@ -148,7 +148,7 @@ Findings worth flagging to reviewers:
 | Check | Command | Result |
 | --- | --- | --- |
 | Types | `npx tsc -p tsconfig.json` | ✅ clean |
-| Unit + component tests | `npm test` | ✅ 281 passed (9 files) |
+| Unit + component tests | `npm test` | ✅ 282 passed (9 files) |
 | dotenv conformance | `npm test` | ✅ 32 fixtures × 2 assertions |
 | Build | `npm run build` | ✅ 86.5 kB gzip (18.3 app + 68.3 vendor) |
 | Privacy guard | `npm run privacy` | ✅ green |
