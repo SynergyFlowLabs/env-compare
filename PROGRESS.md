@@ -13,8 +13,8 @@ Implementation tracker for EnvCompare. The plan comes from [docs/PRD.md](docs/PR
 | 0 | Scaffold: Vite + React 19 + TS, test toolchain, `AGENTS.md`, privacy-first repo config | §14 | ✅ done |
 | 1 | Parser core: lossless scanner, dotenv-compatible semantics, diagnostics | §12.1–12.4 | ✅ done |
 | 2 | Parser fixture corpus + conformance tests against real `dotenv` | §16.2 | ✅ done |
-| 3 | Compare engine: key universe, six states, severity, summary, ordering | §9, §12.5 | ⬜ |
-| 4 | Placeholder + secret heuristics | §12.9, §12.10 | ⬜ |
+| 3 | Compare engine: key universe, six states, severity, summary, ordering | §9, §12.5 | ✅ done |
+| 4 | Placeholder + secret heuristics | §12.9, §12.10 | ✅ done |
 | 5 | Surgical patch engine (edit / add / remove / uncomment) + undo | §12.13 | ⬜ |
 | 6 | Exporters: fix block, redacted report, agent prompt | §8.3 | ⬜ |
 | 7 | UI: input state, sample data, role detection, swap, clear | §10.2 | ⬜ |
@@ -53,6 +53,24 @@ Two bugs the tests caught, both now fixed and covered:
 1. **CRLF inside a multiline quoted value.** dotenv normalises line endings for the whole file before parsing, so `MULTI="one\r\ntwo"` yields `one\ntwo`. Our value kept the `\r`. Fixed in `normalizeValue`; the conformance suite failed loudly, which is exactly its job.
 2. **Line numbers drifted on CRLF files.** dotenv's leading `\s*` can consume the *previous* line's terminator, so `match.index` points into the previous line. Line numbers are now derived from the key offset, and `span.start` is snapped to the start of the physical line so a later "remove line" edit cannot eat the preceding newline.
 
+### 2026-10-20 — Steps 3–4: compare engine + heuristics
+
+Built `src/core/compare/`:
+
+- `types.ts` — `Presence`, `Cell`, `KeyRow`, `Comparison`, severity ranking, plain-language presence labels.
+- `compare.ts` — key universe (reference order → commented keys → target-only keys in first-appearance order), per-cell classification, row severity/bucket, per-file counts, summary, and per-file diagnostics (parse + unresolved `${REF}`).
+- `placeholder.ts` — the two-tier heuristic from §12.9: high confidence only, because a false positive teaches people to ignore warnings.
+- `secrets.ts` — key-name and value-shape detection for masking, the live-credential hint, and report redaction.
+- `roles.ts` — reference detection for `.env.example` / `.sample` / `.template` / `.dist` / `example.env`.
+
+**226 tests green**, including the full Appendix B state matrix, the Appendix A golden case, and a 2 × 1,200-key comparison in < 50 ms.
+
+Three problems surfaced while writing the tests — all fixed:
+
+1. **Commented keys were invisible in the table.** `SENTRY_DSN` exists only as `# SENTRY_DSN=` in the example, so it never entered the key universe and the row simply did not exist. `commentedKeys` is now a `Map<key, line>` and its keys join the universe right after the reference's real keys, preserving source order. This is what makes "optional integration, switched off" visible instead of silently absent.
+2. **Severity ties resolved arbitrarily.** With one target missing a key and another having it empty, both are `error` but the *fix* differs (add vs fill). Rows now tie-break by bucket priority (`missing` > `needsValue` > …) so the report names the most actionable problem.
+3. **The PRD's Appendix A contradicted Appendix B.** Appendix A called a real JWT replacing `your-anon-key` a "difference"; Appendix B correctly treats a placeholder-that-got-filled as **matching**. Appendix B is right — flagging every correctly filled row as "different" is noise — so the PRD was corrected, not the code.
+
 ---
 
 ## Decisions made during implementation
@@ -65,6 +83,8 @@ Two bugs the tests caught, both now fixed and covered:
 | 2026-10-20 | Only two skills vendored into `.agents/skills` | The full skills pack is 13 MB of unrelated material |
 | 2026-10-20 | Fixtures are locked by a golden `expectations.json`, not per-file JSON | One reviewable file; a new fixture without an expectation fails the suite |
 | 2026-10-20 | `dotenv` stays a devDependency; grammar is vendored into `src/core` | Keeps the browser bundle free of Node shims while conformance keeps us honest |
+| 2026-10-20 | Filling a placeholder counts as `matching`, not `different` | A user who did the right thing must not see a flag on their row |
+| 2026-10-20 | Secret detection only ever *adds* masking/warnings | A detector that hides or rewrites data would be a new failure mode |
 
 ---
 
@@ -73,7 +93,7 @@ Two bugs the tests caught, both now fixed and covered:
 | Check | Command | Result |
 | --- | --- | --- |
 | Types | `npx tsc -p tsconfig.json` | ✅ clean |
-| Unit tests | `npm test` | ✅ 123 passed (4 files) |
+| Unit tests | `npm test` | ✅ 226 passed (6 files) |
 | dotenv conformance | `npm test` | ✅ 32 fixtures × 2 assertions |
 | Build | `npx vite build` | ✅ 68.6 kB gzip |
 | Privacy guard | `npm run privacy` | ⬜ not implemented yet |
@@ -82,4 +102,4 @@ Two bugs the tests caught, both now fixed and covered:
 
 ## Next step
 
-**Step 3 — compare engine.** Key universe and ordering (reference first, then target-only keys), the six presence states, row severity, summary counts, and the "reference is commented ⇒ absent target is not an error" rule from PRD §9.4.
+**Step 5 — patch engine.** Surgical text edits (`replaceValue`, `insertKey`, `removeKey`, `uncomment`) that preserve quoting, comments, ordering and line endings, plus the in-memory undo stack from PRD §12.13.

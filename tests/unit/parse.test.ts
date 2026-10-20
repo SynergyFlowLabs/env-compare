@@ -71,7 +71,7 @@ describe('parse — comments', () => {
   it('detects commented-out assignments without treating them as variables', () => {
     const parsed = parse('# SENTRY_DSN=\n#GOOGLE_ID=123\n# just a note\n');
     expect(parsed.effective.size).toBe(0);
-    expect([...parsed.commentedKeys]).toEqual(['SENTRY_DSN', 'GOOGLE_ID']);
+    expect([...parsed.commentedKeys.keys()]).toEqual(['SENTRY_DSN', 'GOOGLE_ID']);
   });
 });
 
