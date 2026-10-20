@@ -21,7 +21,7 @@ The product is only useful because people paste **real secrets** into it. These 
 
 1. No storage APIs: `localStorage`, `sessionStorage`, `indexedDB`, cookies, cache storage, service workers. Not even for a theme preference.
 2. No network APIs: `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, `sendBeacon`, `history.pushState`.
-3. No new runtime dependency without a maintainer's `deps-approved` label. Runtime dependencies are exactly `react` and `react-dom`.
+3. No new runtime dependency without review. The allowlist lives in `scripts/check-privacy.mjs` with a reason and a license per entry, and the guard fails the build on anything else, on a changed license, or on an install script. Adding an entry is a deliberate act: say what it does in the PR.
 4. No file content in a URL, a hash, or a share link.
 5. Masked values must not exist in the DOM while masked.
 6. Fix blocks, reports (default redaction) and agent prompts must never contain a value. Tests assert this with real-looking strings.
@@ -38,6 +38,16 @@ The parser is the product's accuracy budget, so changes go test-first:
 4. Then change the parser.
 
 If the fixture reveals a genuine divergence from dotenv, say so in the PR: a documented divergence is fine, an accidental one is a bug.
+
+## UI components
+
+The interface is [shadcn/ui](https://ui.shadcn.com) source, copied in rather than installed:
+
+- Primitives live in `src/ui/components/ui/` and are adapted from upstream only to fit this product's scale (13px text, 32px controls). If you need a new one, copy the upstream source and add the dependency it needs to the reviewed allowlist — do not add a design-system package.
+- Product components live in `src/ui/components/` and compose the primitives.
+- `cn()` from `src/ui/lib/utils.ts` for conditional classes; no ad-hoc template strings.
+- Colours come from the tokens in `src/styles/tokens.css` via the Tailwind theme in `src/styles/global.css` (`bg-card`, `text-missing`, `border-ok/25`…). Do not hard-code a hex value in a component: it will not follow the theme, and the contrast test cannot see it.
+- shadcn's semantic names (`background`, `card`, `primary`, `muted`, `border`) are mapped onto the palette; the six comparison states keep their own names.
 
 ## Code layout
 

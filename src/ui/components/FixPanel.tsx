@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
 import type { Comparison } from '../../core/compare';
 import { buildAgentPrompt, buildFixBlock, buildReport, type Redaction } from '../../core/export';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Label } from './ui/label';
 
 export interface FixPanelProps {
   comparison: Comparison;
@@ -17,6 +20,9 @@ const REDACTIONS: Array<{ id: Redaction; label: string }> = [
   { id: 'full', label: 'Full values' },
 ];
 
+const CODE_BLOCK =
+  'max-h-[320px] overflow-auto rounded-md border border-border bg-secondary/60 px-3 py-2.5 font-mono text-[12.5px] leading-relaxed whitespace-pre scroll-quiet';
+
 export function FixPanel({ comparison, targetId, targetName, targetText, onCopy, onDownload }: FixPanelProps) {
   const [redaction, setRedaction] = useState<Redaction>('keys');
 
@@ -31,50 +37,53 @@ export function FixPanel({ comparison, targetId, targetName, targetText, onCopy,
   );
 
   return (
-    <div style={{ display: 'grid', gap: 18 }}>
-      <section className="panel" aria-labelledby="fix-heading">
-        <div className="panel__head">
-          <strong id="fix-heading">Paste this into {targetName}</strong>
-          <span className="panel__head-spacer" />
-          <span>{fix.keys.length} to add</span>
-        </div>
-        <div className="panel__body">
+    <div className="grid gap-4">
+      <Card>
+        <CardHeader className="border-b border-border">
+          <CardTitle id="fix-heading" className="flex-1">
+            Paste this into <span className="mono">{targetName}</span>
+          </CardTitle>
+          <span className="text-[12px] text-muted-foreground">{fix.keys.length} to add</span>
+        </CardHeader>
+        <CardContent className="pt-3">
           {fix.keys.length === 0 ? (
-            <p className="muted">
+            <p className="text-[13px] text-muted-foreground">
               Nothing to add — every required variable is already in {targetName}.
             </p>
           ) : (
             <>
-              <pre className="code-block">{fix.text}</pre>
-              <p className="muted" style={{ marginTop: 10, fontSize: 13 }}>
+              <pre className={CODE_BLOCK} aria-label={`Variables to add to ${targetName}`}>
+                {fix.text}
+              </pre>
+              <p className="mt-2.5 text-[12.5px] text-muted-foreground">
                 Values are blank on purpose: this tool never copies a value between files.
               </p>
-              <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                <button
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
                   type="button"
-                  className="btn btn--primary"
                   onClick={() => onCopy(fix.text, `Copied ${fix.keys.length} variables`)}
                 >
                   Copy {fix.keys.length} for {targetName}
-                </button>
+                </Button>
               </div>
             </>
           )}
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
-      <section className="panel" aria-labelledby="report-heading">
-        <div className="panel__head">
-          <strong id="report-heading">Share the result</strong>
-          <span className="panel__head-spacer" />
-          <label htmlFor="redaction" className="muted">
+      <Card>
+        <CardHeader className="border-b border-border">
+          <CardTitle id="report-heading" className="flex-1">
+            Share the result
+          </CardTitle>
+          <Label htmlFor="redaction" className="text-[12px] font-normal text-muted-foreground">
             Include
-          </label>
+          </Label>
           <select
             id="redaction"
             value={redaction}
             onChange={(event) => setRedaction(event.target.value as Redaction)}
-            className="btn btn--sm"
+            className="h-7 rounded-sm border border-input bg-card px-1.5 text-[12.5px] text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/25 focus-visible:outline-none"
           >
             {REDACTIONS.map((option) => (
               <option key={option.id} value={option.id}>
@@ -82,60 +91,52 @@ export function FixPanel({ comparison, targetId, targetName, targetText, onCopy,
               </option>
             ))}
           </select>
-        </div>
-        <div className="panel__body">
-          <pre className="code-block" aria-label="Report preview">
+        </CardHeader>
+        <CardContent className="pt-3">
+          <pre className={CODE_BLOCK} aria-label="Report preview">
             {report}
           </pre>
           {redaction === 'full' ? (
-            <p style={{ marginTop: 10, fontSize: 13, color: 'var(--st-missing)' }}>
+            <p className="mt-2.5 text-[12.5px] text-missing">
               Full values are included. This report is as sensitive as the file itself.
             </p>
           ) : (
-            <p className="muted" style={{ marginTop: 10, fontSize: 13 }}>
+            <p className="mt-2.5 text-[12.5px] text-muted-foreground">
               Safe to paste into a PR, a chat, or an issue.
             </p>
           )}
-          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => onCopy(report, 'Report copied')}
-            >
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={() => onCopy(report, 'Report copied')}>
               Copy report
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn"
+              variant="outline"
               onClick={() => onCopy(prompt, 'Prompt copied')}
               disabled={prompt === ''}
             >
               Copy prompt for my agent
-            </button>
+            </Button>
           </div>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
-      <section className="panel" aria-labelledby="download-heading">
-        <div className="panel__head">
-          <strong id="download-heading">Keep the file</strong>
-        </div>
-        <div className="panel__body">
-          <p className="muted" style={{ fontSize: 13 }}>
+      <Card>
+        <CardHeader className="border-b border-border">
+          <CardTitle id="download-heading">Keep the file</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-3">
+          <p className="max-w-[62ch] text-[12.5px] text-muted-foreground">
             The download is generated in this tab from the text you pasted — nothing is sent
             anywhere. Comments, ordering and line endings are preserved.
           </p>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => onDownload(targetName || 'env', targetText)}
-            >
+          <div className="mt-3 flex gap-2">
+            <Button type="button" variant="outline" onClick={() => onDownload(targetName || 'env', targetText)}>
               Download {targetName || 'env'}
-            </button>
+            </Button>
           </div>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
     </div>
   );
 }

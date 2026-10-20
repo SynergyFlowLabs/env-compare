@@ -49,8 +49,8 @@ export function SummaryLine({ comparison }: SummaryLineProps) {
 
   if (comparison.summary.total === 0) {
     return (
-      <p className="summary-line" aria-live="polite">
-        <span className="summary-line__icon" aria-hidden="true">
+      <p className="flex items-start gap-2 text-[15px] text-muted-foreground" aria-live="polite">
+        <span className="mt-px shrink-0 select-none text-faint" aria-hidden="true">
           ·
         </span>
         <span>Paste both files to see what is missing.</span>
@@ -60,27 +60,26 @@ export function SummaryLine({ comparison }: SummaryLineProps) {
 
   if (clean) {
     return (
-      <p className="summary-line summary-line--ok" aria-live="polite">
-        <span className="summary-line__icon" aria-hidden="true">
+      <p className="flex items-start gap-2 text-[15px]" aria-live="polite">
+        <span className="mt-px shrink-0 select-none font-semibold text-ok" aria-hidden="true">
           ✓
         </span>
         <span>
           Nothing is missing. {targetLabel} matches {referenceLabel} across{' '}
-          {comparison.summary.total}{' '}
-          {comparison.summary.total === 1 ? 'variable' : 'variables'}.
+          {comparison.summary.total} {comparison.summary.total === 1 ? 'variable' : 'variables'}.
         </span>
       </p>
     );
   }
 
   return (
-    <p className="summary-line" aria-live="polite">
-      <span className="summary-line__icon" aria-hidden="true">
+    <p className="flex items-start gap-2 text-[15px]" aria-live="polite">
+      <span className="mt-px shrink-0 select-none text-missing" aria-hidden="true">
         ⚠
       </span>
       <span>
         {clauses.map((clause, index) => (
-          <span key={clause.text} className={clause.tone === 'note' ? 'muted' : undefined}>
+          <span key={clause.text} className={clause.tone === 'note' ? 'text-muted-foreground' : undefined}>
             {index > 0 ? ' ' : ''}
             {clause.text}
           </span>

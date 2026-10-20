@@ -64,6 +64,8 @@ Requires Node 22.
 | `npm run test:e2e` | Playwright suite; needs `npx playwright install` first |
 | `npm run check` | Tests, build and guard — what CI runs |
 
+UI components are [shadcn/ui](https://ui.shadcn.com) source, copied into `src/ui/components/ui` rather than pulled from a package. Tailwind v4 and Radix are the only additions to the front end; the palette still comes from [tokens.css](src/styles/tokens.css), so light and dark stay one source of truth.
+
 ## How the guarantees are enforced
 
 The privacy promise is not a paragraph in a policy. Each claim has a mechanism, and each mechanism has a test:
@@ -72,7 +74,7 @@ The privacy promise is not a paragraph in a policy. Each claim has a mechanism, 
 | --- | --- |
 | Nothing is uploaded | Static site, no backend. Production CSP sets `connect-src 'none'`. |
 | Nothing is stored | No `localStorage`, `sessionStorage`, `IndexedDB`, cookies, cache or service worker. `npm run privacy` fails the build if any appears in `src/`. |
-| No third-party code | Runtime dependencies are exactly `react` and `react-dom`; CI asserts it. No fonts CDN, no analytics, no tag manager. |
+| No third-party code that reports back | Runtime dependencies are a short, reviewed allowlist (React, Radix primitives for the dialog and tabs, and four small utilities) checked by CI. No fonts CDN, no analytics, no tag manager, no error reporter. |
 | No shareable links | No URL or hash state, so file content can never reach a link, a history entry, or a screenshot of the address bar. |
 | Masking is real | Masked values are removed from the DOM, not hidden with CSS. |
 | Exports are safe | Fix blocks, agent prompts and default reports contain key names only. |
@@ -107,15 +109,17 @@ Good first issues are labelled [`good first issue`](https://github.com/SynergyFl
 ## Repository layout
 
 ```
-src/core/       parsing, comparison, patches, exporters — pure TypeScript, no DOM
-src/state/      one reducer, no persistence
-src/ui/         React components
-src/styles/     design tokens and one stylesheet
+src/core/            parsing, comparison, patches, exporters — pure TypeScript, no DOM
+src/state/           one reducer, no persistence
+src/ui/components/   product components
+src/ui/components/ui shadcn/ui primitives (button, card, dialog, tabs, table…)
+src/styles/          tokens.css (the palette) + Tailwind theme
+components.json      shadcn configuration
 docs/PRD.md     the specification, written before the code
 docs/DESIGN.md  palette, type, layout, motion, copy
 docs/PRIVACY.md the long version of the privacy claim
 e2e/            Playwright: no-network, no-storage, masked-DOM, hostile-storage
-tests/          282 unit and component tests, 32 parser fixtures
+tests/          320 unit and component tests, 32 parser fixtures
 AGENTS.md       conventions for humans and AI agents
 PROGRESS.md     build log and decisions
 ```

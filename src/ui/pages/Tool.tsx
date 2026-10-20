@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useReducer } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, type ReactNode } from 'react';
+import { ArrowLeftRight, Copy, Eye, EyeOff, Pencil } from 'lucide-react';
 import { compare, type Bucket, type Comparison, type FileInput } from '../../core/compare';
 import { parseEnvFile } from '../../core/parse';
 import { buildFixBlock } from '../../core/export';
 import { countLines } from '../../core/parse';
-import { reducer, initialState } from '../../state/reducer';
+import { reducer, initialState, type Tab } from '../../state/reducer';
 import { copyText, downloadText, safeFileName } from '../lib/clipboard';
+import { cn } from '../lib/utils';
 import { FilePane } from '../components/FilePane';
 import { SiteHeader } from '../components/SiteHeader';
 import { SkipLink } from '../components/SkipLink';
@@ -15,13 +17,16 @@ import { FixPanel } from '../components/FixPanel';
 import { Diagnostics } from '../components/Diagnostics';
 import { Toast } from '../components/Toast';
 import { Dialog } from '../components/Dialog';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
-const TABS = [
+const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
   { id: 'summary', label: 'Summary' },
   { id: 'table', label: 'Table' },
   { id: 'raw', label: 'Raw' },
   { id: 'fix', label: 'Fix' },
-] as const;
+];
 
 const FILTERS: Array<{ id: Filter; label: string }> = [
   { id: 'all', label: 'All' },
@@ -106,22 +111,26 @@ export function Tool() {
   const problems = comparison.summary.missing + comparison.summary.needsValue;
 
   return (
-    <div className="shell">
+    <div className="flex min-h-screen flex-col">
       <SkipLink />
       <SiteHeader current="tool" />
 
-      <main className="shell__main" id="main" tabIndex={-1}>
+      <main className="mx-auto w-full max-w-[1180px] flex-1 px-4 pb-16 sm:px-6" id="main" tabIndex={-1}>
         {state.view === 'input' || !bothHaveKeys ? (
-          <section className="landing" aria-labelledby="landing-title">
-            <h1 className="landing__title" id="landing-title">
+          <section className="pt-12 sm:pt-16" aria-labelledby="landing-title">
+            <h1
+              className="max-w-[24ch] text-[32px] leading-[1.08] font-semibold tracking-[-0.03em] sm:text-[40px]"
+              id="landing-title"
+            >
               See what your <code className="mono">.env</code> is missing.
             </h1>
-            <p className="landing__lede">
-              Paste your <code>.env.example</code> and your <code>.env</code>. This shows every
-              variable that is missing, empty, or leftover — and gives you the block to paste back.
+            <p className="mt-3 max-w-[64ch] text-[16px] text-muted-foreground">
+              Paste your <code className="mono">.env.example</code> and your{' '}
+              <code className="mono">.env</code>. This shows every variable that is missing, empty,
+              or leftover — and gives you the block to paste back.
             </p>
 
-            <div className="landing__panes">
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
               {state.files.map((file) => (
                 <FilePane
                   key={file.id}
@@ -138,19 +147,25 @@ export function Tool() {
               ))}
             </div>
 
-            <div className="landing__footer">
-              <button type="button" className="linkish" onClick={() => dispatch({ type: 'loadSample' })}>
-                See an example
-              </button>
-              <button
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px]">
+              <Button
                 type="button"
-                className="linkish"
+                variant="link"
+                className="h-auto px-0 text-[13px]"
+                onClick={() => dispatch({ type: 'loadSample' })}
+              >
+                See an example
+              </Button>
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto px-0 text-[13px]"
                 onClick={() => dispatch({ type: 'swapRoles' })}
                 disabled={!referenceFile.text && !targetFile.text}
               >
                 Swap which file is the reference
-              </button>
-              <span className="muted">
+              </Button>
+              <span className="text-muted-foreground">
                 Nothing is sent anywhere. Close the tab and it&apos;s gone.
               </span>
             </div>
@@ -158,73 +173,66 @@ export function Tool() {
         ) : null}
 
         {bothHaveKeys ? (
-          <section className="results" aria-label="Comparison results">
-            <div className="results__bar">
-              <button
-                type="button"
-                className="btn btn--ghost btn--sm"
+          <section className="pt-5" aria-label="Comparison results">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => dispatch({ type: 'view', view: 'input' })}
               >
+                <Pencil aria-hidden="true" />
                 Edit files
-              </button>
-              <span className="results__names">
+              </Button>
+              <span className="mono text-[12.5px] text-muted-foreground">
                 {referenceFile.name} → {targetFile.name}
               </span>
-              <span className="results__bar-spacer" />
-              <button
-                type="button"
-                className="btn btn--sm"
+              <span className="flex-1" />
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => dispatch({ type: 'toggleMask' })}
                 aria-pressed={state.maskValues}
               >
+                {state.maskValues ? <Eye aria-hidden="true" /> : <EyeOff aria-hidden="true" />}
                 {state.maskValues ? 'Show values' : 'Hide values'}
-              </button>
-              <button
-                type="button"
-                className="btn btn--sm btn--ghost"
-                onClick={() => dispatch({ type: 'swapRoles' })}
-              >
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => dispatch({ type: 'swapRoles' })}>
+                <ArrowLeftRight aria-hidden="true" />
                 Swap
-              </button>
-              <button
-                type="button"
-                className="btn btn--sm btn--ghost"
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => dispatch({ type: 'confirmClear', open: true })}
               >
                 Clear all
-              </button>
+              </Button>
             </div>
 
-            <SummaryLine comparison={comparison} />
-
-            <div className="tabs" role="tablist" aria-label="Views">
-              {TABS.map((tab, index) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  id={`tab-${tab.id}`}
-                  aria-selected={state.tab === tab.id}
-                  aria-controls={`panel-${tab.id}`}
-                  className="tab"
-                  onClick={() => dispatch({ type: 'tab', tab: tab.id })}
-                >
-                  {tab.label}
-                  {tab.id === 'table' && problems > 0 ? (
-                    <span className="tab__count">{problems}</span>
-                  ) : null}
-                  <span className="sr-only"> (Alt+{index + 1})</span>
-                </button>
-              ))}
+            <div className="mt-4">
+              <SummaryLine comparison={comparison} />
             </div>
 
-            <div
-              role="tabpanel"
-              id={`panel-${state.tab}`}
-              aria-labelledby={`tab-${state.tab}`}
-              style={{ animation: 'none' }}
+            <Tabs
+              className="mt-4"
+              value={state.tab}
+              onValueChange={(value) => dispatch({ type: 'tab', tab: value as Tab })}
             >
-              {state.tab === 'summary' ? (
+              <TabsList aria-label="Views">
+                {TABS.map((tab, index) => (
+                  <TabsTrigger key={tab.id} value={tab.id}>
+                    {tab.label}
+                    {tab.id === 'table' && problems > 0 ? (
+                      <span className="rounded-full bg-secondary px-1.5 text-[11px] font-semibold text-muted-foreground group-data-[state=active]:bg-brand-soft group-data-[state=active]:text-primary">
+                        {problems}
+                      </span>
+                    ) : null}
+                    <span className="sr-only"> (Alt+{index + 1})</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              <TabsContent value="summary" className="mt-1">
                 <SummaryPanel
                   comparison={comparison}
                   fixBlock={fixBlock}
@@ -232,125 +240,115 @@ export function Tool() {
                   onCopy={() => void copy(fixBlock.text, `Copied ${fixBlock.keys.length} variables`)}
                   onShowTable={() => dispatch({ type: 'tab', tab: 'table' })}
                 />
-              ) : null}
+              </TabsContent>
 
-              {state.tab === 'table' ? (
-                <>
-                  <div className="filters">
-                    {FILTERS.map((filter) => {
-                      const count = countFor(comparison, filter.id);
-                      if (filter.id !== 'all' && count === 0) return null;
-                      return (
-                        <button
-                          key={filter.id}
-                          type="button"
-                          className="chip-toggle"
-                          aria-pressed={state.filter === filter.id}
-                          onClick={() => dispatch({ type: 'filter', filter: filter.id })}
-                        >
-                          {filter.label}
-                          {filter.id === 'all' ? '' : ` ${count}`}
-                        </button>
-                      );
-                    })}
-                    <span style={{ flex: 1 }} />
-                    <button
-                      type="button"
-                      className="chip-toggle"
-                      aria-pressed={state.sort === 'alpha'}
-                      onClick={() =>
-                        dispatch({ type: 'sort', sort: state.sort === 'file' ? 'alpha' : 'file' })
-                      }
-                    >
-                      {state.sort === 'file' ? 'Sort A–Z' : 'Sort by file order'}
-                    </button>
-                  </div>
-                  <CompareTable
-                    comparison={comparison}
-                    maskValues={state.maskValues}
-                    revealed={new Set(state.revealed)}
-                    filter={state.filter}
-                    sort={state.sort}
-                    actions={{
-                      onReveal: (fileId, key) => dispatch({ type: 'reveal', fileId, key }),
-                      onEdit: (fileId, key, value) => {
-                        const cell = comparison.rows
-                          .find((row) => row.key === key)
-                          ?.cells.find((c) => c.fileId === fileId);
-                        const occurrence = cell?.occurrence;
-                        if (!occurrence) return;
-                        dispatch({
-                          type: 'patch',
-                          fileId,
-                          label: `Edit ${key}`,
-                          toast: `Updated ${key}`,
-                          patch: {
-                            kind: 'replaceValue',
-                            span: occurrence.valueSpan,
-                            nextValue: value,
-                            quote: occurrence.quote,
-                          },
-                        });
-                      },
-                      onAdd: (fileId, key) => {
-                        dispatch({
-                          type: 'patch',
-                          fileId,
-                          label: `Add ${key}`,
-                          toast: `Added ${key}`,
-                          patch: { kind: 'insertKey', key },
-                        });
-                      },
-                      onUncomment: (fileId, line) => {
-                        dispatch({
-                          type: 'patch',
-                          fileId,
-                          label: 'Uncomment',
-                          toast: 'Uncommented',
-                          patch: { kind: 'uncomment', line },
-                        });
-                      },
-                      onRemove: (fileId, span) => {
-                        dispatch({
-                          type: 'patch',
-                          fileId,
-                          label: 'Remove line',
-                          toast: 'Removed',
-                          patch: { kind: 'removeKey', span },
-                        });
-                      },
-                    }}
-                  />
-                </>
-              ) : null}
-
-              {state.tab === 'raw' ? (
-                <div style={{ marginTop: 16 }}>
-                  <RawView
-                    comparison={comparison}
-                    texts={texts}
-                    parsed={parsed}
-                    maskValues={state.maskValues}
-                  />
+              <TabsContent value="table" className="mt-1">
+                <div className="mb-3 flex flex-wrap items-center gap-1.5">
+                  {FILTERS.map((filter) => {
+                    const count = countFor(comparison, filter.id);
+                    if (filter.id !== 'all' && count === 0) return null;
+                    return (
+                      <FilterChip
+                        key={filter.id}
+                        pressed={state.filter === filter.id}
+                        onClick={() => dispatch({ type: 'filter', filter: filter.id })}
+                      >
+                        {filter.label}
+                        {filter.id === 'all' ? '' : ` ${count}`}
+                      </FilterChip>
+                    );
+                  })}
+                  <span className="flex-1" />
+                  <FilterChip
+                    pressed={state.sort === 'alpha'}
+                    onClick={() =>
+                      dispatch({ type: 'sort', sort: state.sort === 'file' ? 'alpha' : 'file' })
+                    }
+                  >
+                    {state.sort === 'file' ? 'Sort A–Z' : 'Sort by file order'}
+                  </FilterChip>
                 </div>
-              ) : null}
+                <CompareTable
+                  comparison={comparison}
+                  maskValues={state.maskValues}
+                  revealed={new Set(state.revealed)}
+                  filter={state.filter}
+                  sort={state.sort}
+                  actions={{
+                    onReveal: (fileId, key) => dispatch({ type: 'reveal', fileId, key }),
+                    onEdit: (fileId, key, value) => {
+                      const cell = comparison.rows
+                        .find((row) => row.key === key)
+                        ?.cells.find((c) => c.fileId === fileId);
+                      const occurrence = cell?.occurrence;
+                      if (!occurrence) return;
+                      dispatch({
+                        type: 'patch',
+                        fileId,
+                        label: `Edit ${key}`,
+                        toast: `Updated ${key}`,
+                        patch: {
+                          kind: 'replaceValue',
+                          span: occurrence.valueSpan,
+                          nextValue: value,
+                          quote: occurrence.quote,
+                        },
+                      });
+                    },
+                    onAdd: (fileId, key) => {
+                      dispatch({
+                        type: 'patch',
+                        fileId,
+                        label: `Add ${key}`,
+                        toast: `Added ${key}`,
+                        patch: { kind: 'insertKey', key },
+                      });
+                    },
+                    onUncomment: (fileId, line) => {
+                      dispatch({
+                        type: 'patch',
+                        fileId,
+                        label: 'Uncomment',
+                        toast: 'Uncommented',
+                        patch: { kind: 'uncomment', line },
+                      });
+                    },
+                    onRemove: (fileId, span) => {
+                      dispatch({
+                        type: 'patch',
+                        fileId,
+                        label: 'Remove line',
+                        toast: 'Removed',
+                        patch: { kind: 'removeKey', span },
+                      });
+                    },
+                  }}
+                />
+              </TabsContent>
 
-              {state.tab === 'fix' ? (
-                <div style={{ marginTop: 16 }}>
-                  <FixPanel
-                    comparison={comparison}
-                    targetId={targetFile.id}
-                    targetName={targetFile.name}
-                    targetText={targetFile.text}
-                    onCopy={(text, label) => void copy(text, label)}
-                    onDownload={(filename, text) => {
-                      downloadText(safeFileName(filename), text);
-                      dispatch({ type: 'toast', message: `Downloaded ${filename}` });
-                    }}
-                  />
-                </div>
-              ) : null}
-            </div>
+              <TabsContent value="raw" className="mt-1">
+                <RawView
+                  comparison={comparison}
+                  texts={texts}
+                  parsed={parsed}
+                  maskValues={state.maskValues}
+                />
+              </TabsContent>
+
+              <TabsContent value="fix" className="mt-1">
+                <FixPanel
+                  comparison={comparison}
+                  targetId={targetFile.id}
+                  targetName={targetFile.name}
+                  targetText={targetFile.text}
+                  onCopy={(text, label) => void copy(text, label)}
+                  onDownload={(filename, text) => {
+                    downloadText(safeFileName(filename), text);
+                    dispatch({ type: 'toast', message: `Downloaded ${filename}` });
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
 
             <Diagnostics files={comparison.perFile} />
           </section>
@@ -394,6 +392,33 @@ export function Tool() {
   );
 }
 
+function FilterChip({
+  pressed,
+  onClick,
+  children,
+}: {
+  pressed: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      onClick={onClick}
+      className={cn(
+        'rounded-full border px-2.5 py-1 text-[12px] leading-none transition-colors',
+        'focus-visible:ring-[3px] focus-visible:ring-ring/30 focus-visible:outline-none',
+        pressed
+          ? 'border-foreground/20 bg-foreground text-background'
+          : 'border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground',
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
 function SummaryPanel({
   comparison,
   fixBlock,
@@ -407,81 +432,84 @@ function SummaryPanel({
   onCopy: () => void;
   onShowTable: () => void;
 }) {
+  const targetName = comparison.perFile.find((f) => f.role === 'target')?.name;
+
   return (
-    <div style={{ marginTop: 16, display: 'grid', gap: 18 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+    <div className="grid gap-4">
+      <div className="grid gap-3 sm:grid-cols-2">
         {comparison.perFile.map((file) => (
-          <div className="panel" key={file.fileId}>
-            <div className="panel__head">
-              <strong className="mono">{file.name}</strong>
-              <span className="panel__head-spacer" />
-              <span>{file.role === 'reference' ? 'reference' : 'target'}</span>
-            </div>
-            <div className="panel__body">
-              <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: '1fr auto', rowGap: 4, fontSize: 13.5 }}>
-                <dt className="muted">Set</dt>
-                <dd style={{ margin: 0, textAlign: 'right' }}>{file.counts.present}</dd>
-                <dt className="muted">Set, but empty</dt>
-                <dd style={{ margin: 0, textAlign: 'right' }}>{file.counts.empty}</dd>
-                <dt className="muted">Still the example value</dt>
-                <dd style={{ margin: 0, textAlign: 'right' }}>{file.counts.placeholder}</dd>
-                <dt className="muted">Commented out</dt>
-                <dd style={{ margin: 0, textAlign: 'right' }}>{file.counts.commented}</dd>
-                <dt className="muted">Not in this file</dt>
-                <dd style={{ margin: 0, textAlign: 'right' }}>{file.counts.absent}</dd>
+          <Card key={file.fileId}>
+            <CardHeader className="border-b border-border">
+              <CardTitle className="mono flex-1 truncate">{file.name}</CardTitle>
+              <span className="text-[11.5px] tracking-wide text-muted-foreground uppercase">
+                {file.role === 'reference' ? 'reference' : 'target'}
+              </span>
+            </CardHeader>
+            <CardContent className="pt-2.5">
+              <dl className="grid grid-cols-[1fr_auto] gap-y-1 text-[13px]">
+                <dt className="text-muted-foreground">Set</dt>
+                <dd className="text-right tabular-nums">{file.counts.present}</dd>
+                <dt className="text-muted-foreground">Set, but empty</dt>
+                <dd className="text-right tabular-nums">{file.counts.empty}</dd>
+                <dt className="text-muted-foreground">Still the example value</dt>
+                <dd className="text-right tabular-nums">{file.counts.placeholder}</dd>
+                <dt className="text-muted-foreground">Commented out</dt>
+                <dd className="text-right tabular-nums">{file.counts.commented}</dd>
+                <dt className="text-muted-foreground">Not in this file</dt>
+                <dd className="text-right tabular-nums">{file.counts.absent}</dd>
               </dl>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {problems > 0 ? (
-        <div className="action-card">
-          <div className="action-card__steps">
-            <p className="action-card__title">What to do now</p>
-            <ol>
-              {comparison.summary.missing > 0 ? (
-                <li>
-                  Add the {comparison.summary.missing} missing{' '}
-                  {comparison.summary.missing === 1 ? 'variable' : 'variables'} to your file.
-                </li>
-              ) : null}
-              {comparison.summary.needsValue > 0 ? (
-                <li>
-                  Fill in the {comparison.summary.needsValue} that {comparison.summary.needsValue === 1 ? 'is' : 'are'} empty or still the example.
-                </li>
-              ) : null}
-              {comparison.summary.extra > 0 ? (
-                <li className="muted">
-                  Optionally remove the {comparison.summary.extra} that{' '}
-                  {comparison.summary.extra === 1 ? 'is' : 'are'} no longer in the example.
-                </li>
-              ) : null}
-            </ol>
-          </div>
-          {fixBlock.keys.length > 0 ? (
-            <button type="button" className="btn btn--primary" onClick={onCopy}>
-              Copy {fixBlock.keys.length} for {comparison.perFile.find((f) => f.role === 'target')?.name}
-            </button>
-          ) : null}
-          <button type="button" className="btn" onClick={onShowTable}>
-            Open the table
-          </button>
-        </div>
-      ) : (
-        <div className="action-card">
-          <div className="action-card__steps">
-            <p className="action-card__title">Nothing to fix</p>
-            <p style={{ fontSize: 13.5 }} className="muted">
-              Your file has every variable the example asks for. The table still shows values that
-              differ between the two files.
+      <Card className="border-l-4 border-l-primary">
+        <CardContent className="flex flex-wrap items-start gap-4 pt-3.5">
+          <div className="min-w-[240px] flex-1">
+            <p className="text-[13px] font-semibold">
+              {problems > 0 ? 'What to do now' : 'Nothing to fix'}
             </p>
+            {problems > 0 ? (
+              <ol className="mt-1.5 list-decimal space-y-1 pl-4 text-[13px] text-muted-foreground">
+                {comparison.summary.missing > 0 ? (
+                  <li>
+                    Add the {comparison.summary.missing} missing{' '}
+                    {comparison.summary.missing === 1 ? 'variable' : 'variables'} to your file.
+                  </li>
+                ) : null}
+                {comparison.summary.needsValue > 0 ? (
+                  <li>
+                    Fill in the {comparison.summary.needsValue} that{' '}
+                    {comparison.summary.needsValue === 1 ? 'is' : 'are'} empty or still the example.
+                  </li>
+                ) : null}
+                {comparison.summary.extra > 0 ? (
+                  <li>
+                    Optionally remove the {comparison.summary.extra} that{' '}
+                    {comparison.summary.extra === 1 ? 'is' : 'are'} no longer in the example.
+                  </li>
+                ) : null}
+              </ol>
+            ) : (
+              <p className="mt-1.5 text-[13px] text-muted-foreground">
+                Your file has every variable the example asks for. The table still shows values
+                that differ between the two files.
+              </p>
+            )}
           </div>
-          <button type="button" className="btn" onClick={onShowTable}>
-            Open the table
-          </button>
-        </div>
-      )}
+          <div className="flex flex-wrap gap-2">
+            {fixBlock.keys.length > 0 ? (
+              <Button type="button" onClick={onCopy}>
+                <Copy aria-hidden="true" />
+                Copy {fixBlock.keys.length} for {targetName}
+              </Button>
+            ) : null}
+            <Button type="button" variant="outline" onClick={onShowTable}>
+              Open the table
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -508,18 +536,30 @@ function CopyFallback({
       onConfirm={onClose}
     >
       <p>{label}. Select the text below and copy it with your keyboard.</p>
-      <textarea readOnly value={text} autoFocus onFocus={(event) => event.currentTarget.select()} />
+      <textarea
+        readOnly
+        value={text}
+        autoFocus
+        onFocus={(event) => event.currentTarget.select()}
+        className="mt-1 h-40 w-full resize-none rounded-md border border-input bg-card px-2.5 py-2 font-mono text-[12px] text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/25 focus-visible:outline-none"
+      />
     </Dialog>
   );
 }
 
 function Footer() {
   return (
-    <footer className="footnote">
+    <footer className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border py-4 text-[12px] text-faint">
       <span>EnvCompare never stores anything. No accounts, no cookies, no analytics.</span>
-      <a href="/privacy">How this works</a>
-      <a href="https://github.com/SynergyFlowLabs/env-compare">Source</a>
+      <a className="text-muted-foreground underline underline-offset-2 hover:text-foreground" href="/privacy">
+        How this works
+      </a>
+      <a
+        className="text-muted-foreground underline underline-offset-2 hover:text-foreground"
+        href="https://github.com/SynergyFlowLabs/env-compare"
+      >
+        Source
+      </a>
     </footer>
   );
 }
-

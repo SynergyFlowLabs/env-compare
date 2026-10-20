@@ -1,4 +1,6 @@
+import { AlertCircle, Info } from 'lucide-react';
 import type { FileSummary } from '../../core/compare';
+import { Alert, AlertTitle } from './ui/alert';
 
 const HIDDEN = new Set(['MULTILINE']);
 
@@ -18,19 +20,26 @@ export function Diagnostics({ files }: { files: FileSummary[] }) {
   const problems = items.filter((item) => item.severity !== 'info').length;
 
   return (
-    <section className="diagnostics" aria-labelledby="diagnostics-heading">
-      <div className="diagnostics__head" id="diagnostics-heading">
-        {problems > 0
-          ? `${problems} ${problems === 1 ? 'line needs' : 'lines need'} a look`
-          : 'A few notes about these files'}
-      </div>
-      <ul>
-        {items.map((item, index) => (
-          <li key={`${item.file}-${item.line}-${index}`} className={`diag--${item.severity}`}>
-            {item.message} <span className="muted">({item.file})</span>
-          </li>
-        ))}
-      </ul>
+    <section className="mt-4" aria-labelledby="diagnostics-heading">
+      <Alert variant={problems > 0 ? 'note' : 'default'}>
+        {problems > 0 ? (
+          <AlertCircle className="row-span-2" aria-hidden="true" />
+        ) : (
+          <Info className="row-span-2" aria-hidden="true" />
+        )}
+        <AlertTitle id="diagnostics-heading" className="text-[12.5px]">
+          {problems > 0
+            ? `${problems} ${problems === 1 ? 'line needs' : 'lines need'} a look`
+            : 'A few notes about these files'}
+        </AlertTitle>
+        <ul className="col-start-2 mt-1 list-disc space-y-0.5 pl-4 text-[12px]">
+          {items.map((item, index) => (
+            <li key={`${item.file}-${item.line}-${index}`}>
+              {item.message} <span className="opacity-70">({item.file})</span>
+            </li>
+          ))}
+        </ul>
+      </Alert>
     </section>
   );
 }

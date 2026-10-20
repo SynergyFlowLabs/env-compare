@@ -8,7 +8,7 @@ EnvCompare exists to be used with real credentials. That only works if you can s
 | --- | --- |
 | Nothing is uploaded | Fully static site. No backend, no API routes, no server functions. `connect-src 'none'` in the production Content-Security-Policy. |
 | Nothing is stored | No `localStorage`, `sessionStorage`, `IndexedDB`, cookies, cache storage, or service worker. `npm run privacy` fails the build if any of those APIs appear in `src/`. |
-| No third-party code | No analytics, no fonts CDN, no tag manager, no CAPTCHA. Runtime dependencies are exactly `react` and `react-dom`, and CI asserts it. |
+| No third-party code that reports back | No analytics, no fonts CDN, no tag manager, no CAPTCHA. Runtime dependencies are a reviewed allowlist (React, Radix primitives for the dialog and tabs, four small utilities) and CI fails on anything else. |
 | No shareable links | No URL or hash state. File content cannot end up in a link, a history entry, or an address bar in a screenshot. |
 | Masking is real | Masked values are removed from the DOM, not hidden with CSS. There is a test for it. |
 | Exports are safe by default | Fix blocks, agent prompts and default reports contain key names only — never a value. |
@@ -78,7 +78,7 @@ Each of these was considered and rejected because it would require knowing somet
 | Adversary | Outcome |
 | --- | --- |
 | A malicious contributor adding an exfiltration call | Caught by the guard and by review; a `fetch` cannot succeed under `connect-src 'none'` |
-| A compromised npm dependency | Runtime dependency list is two packages and pinned by lockfile; `ignore-scripts=true` in `.npmrc` |
+| A compromised npm dependency | The runtime list is nine reviewed packages with a license check and an install-script check in CI, pinned by lockfile; `ignore-scripts=true` in `.npmrc` |
 | Someone reading the deployed JavaScript | Bundle contains no endpoints and no keys; only the sample fixtures |
 | Network eavesdropping after load | There is no post-load traffic to eavesdrop on |
 | A shared or public computer | Reload clears everything; no history to find |

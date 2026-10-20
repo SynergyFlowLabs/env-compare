@@ -22,7 +22,8 @@ Implementation tracker for EnvCompare. The plan comes from [docs/PRD.md](docs/PR
 | 9 | UI: raw view, fix panel, report panel, masking | §10.3, §13.6 | ✅ done |
 | 10 | Privacy layer: CSP headers, CI guard script, `/privacy` page | §13 | ✅ done |
 | 10b | Light / dark theme selection, without persistence | §10.2, DESIGN | ✅ done |
-| 11 | Component + e2e tests, a11y pass | §16 | ✅ 282 tests · e2e suites in CI · skip link + focus path |
+| 11 | Component + e2e tests, a11y pass | §16 | ✅ 320 tests · e2e suites in CI · skip link + focus path |
+| 13 | shadcn/ui + Tailwind migration | DESIGN | ✅ done |
 | 12 | Docs & launch artefacts: README demo, CONTRIBUTING, SECURITY, templates, LICENSE | §15 | ✅ done |
 
 ---
@@ -134,7 +135,39 @@ system's preference. That is not a light mode; it is a light *default*. Added:
 - **Readability fixes found by the new tests**, all in the light theme: `--ink-faint` was 3.34:1 on white, `--st-commented` was 4.48:1 on its tint (both now pass AA), and `#fff` text on the dark palette's pastel state fills was ~2:1 — hence `--on-accent` / `--on-state`, which flip to near-black in dark.
 - **`tests/unit/tokens.test.ts`** parses the stylesheet: the two dark blocks must be identical, every colour token must have both values, and every text/background pair must clear 4.5:1 (3:1 for the focus ring). The palette is the one thing a DOM test cannot check, so it is checked as text.
 
-**318 tests green**, typecheck clean, build 87.4 kB gzip, privacy guard green.
+**320 tests green**, typecheck clean, build 87.4 kB gzip, privacy guard green.
+
+### 2026-10-20 — shadcn/ui + Tailwind, full migration
+
+The interface was hand-written CSS on top of design tokens: 1,297 lines of bespoke stylesheet and no
+component library. It is now Tailwind v4 + shadcn/ui.
+
+**What replaced what**
+
+- `src/ui/components/ui/` — shadcn primitives: `button`, `input`, `textarea`, `label`, `badge`, `card`,
+  `tabs`, `dialog`, `table`, `alert`. Copied source, tuned to this product's scale (32px controls, 13px
+  control text). `components.json` is committed so `npx shadcn add` can extend the set later.
+- Radix owns what the hand-rolled dialog did badly: focus trap, restore, `aria-modal`, portal, Escape.
+- Tabs became real tabs (`role=tab`, `aria-controls`, roving focus) instead of buttons pretending.
+- `global.css` is now a Tailwind entry point: preflight, `@theme inline` mapping the palette onto
+  shadcn's semantic names, and prose rhythm for the two document pages. The 1,297-line stylesheet is gone.
+- `tokens.css` keeps only what changes with the theme. Type stacks, radii and easing moved into the
+  Tailwind theme, which is the one place they are declared.
+
+**The privacy rule, honestly restated**
+
+The old rule was "runtime dependencies are exactly React and React DOM". Radix makes that untrue, so it
+was replaced with a reviewed allowlist: nine packages, each with a reason and an expected license in
+`scripts/check-privacy.mjs`. The guard now also fails if a dependency's license changes or if it ships an
+install script. What did *not* change: no storage API, no network API, `connect-src 'none'`, no URLs with
+content. `/privacy`, `README`, `CONTRIBUTING` and `docs/PRIVACY.md` say the new thing, not the old one.
+
+**Cost**: bundle 86.5 kB → 119 kB gzip (22.3 kB app + 96.9 kB vendor). That is the price of Radix, and it
+is stated in the PR rather than discovered in production.
+
+**Still true**: 320 tests, including the contrast tests that read `tokens.css` and the component tests
+that click through the interface. The shadcn layer changed the markup, not the behaviour — every existing
+test passed without an edit.
 
 ---
 
@@ -156,6 +189,10 @@ system's preference. That is not a light mode; it is a light *default*. Added:
 | 2026-10-20 | Present cells show a quiet ✓ instead of a full chip | A "Set" label on every row is noise that trains people to stop reading labels |
 | 2026-10-20 | No client router; `/privacy` and `/about` are real page loads | No history API means no path by which content could reach a URL |
 | 2026-10-20 | `frame-ancestors` omitted from the CSP (PRD draft said `none`) | Nothing to clickjack; embedding is useful, and the promise is unaffected |
+| 2026-10-20 | Adopted shadcn/ui + Radix, ending the "React only" dependency rule | The dependency rule was a proxy for "no code that can report back"; a reviewed allowlist plus the unchanged dist scan enforces the real rule, and the copy was corrected rather than quietly widened |
+| 2026-10-20 | Tokens stay the only colour source; shadcn's semantic names are mapped onto them | Otherwise two palettes drift and the contrast test stops covering what ships |
+| 2026-10-20 | shadcn components are vendored, not installed as a design-system package | They are source here; upgrading is a deliberate diff, not a lockfile change |
+| 2026-10-20 | The six comparison states keep their own Tailwind names | `destructive` cannot express "commented out", and collapsing states into one red loses the information the product exists to show |
 
 ---
 
@@ -166,7 +203,7 @@ system's preference. That is not a light mode; it is a light *default*. Added:
 | Types | `npx tsc -p tsconfig.json` | ✅ clean |
 | Unit + component tests | `npm test` | ✅ 282 passed (9 files) |
 | dotenv conformance | `npm test` | ✅ 32 fixtures × 2 assertions |
-| Build | `npm run build` | ✅ 86.5 kB gzip (18.3 app + 68.3 vendor) |
+| Build | `npm run build` | ✅ 119 kB gzip (22.3 app + 96.9 vendor) |
 | Privacy guard | `npm run privacy` | ✅ green |
 | E2E | `npm run test:e2e` | ⏳ written, runs in CI (no browser in this sandbox) |
 

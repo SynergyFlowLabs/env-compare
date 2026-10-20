@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { Comparison, Presence } from '../../core/compare';
 import type { ParsedFile, SourceLine } from '../../core/types';
 import { splitLines } from '../../core/parse';
+import { cn } from '../lib/utils';
 
 interface RawViewProps {
   comparison: Comparison;
@@ -14,6 +15,14 @@ type Rendered =
   | { kind: 'line'; number: number; text: string; presence?: Presence }
   | { kind: 'marker'; key: string };
 
+const LINE_TONE: Record<Presence, string> = {
+  present: 'text-foreground',
+  empty: 'bg-empty-tint/60 text-empty',
+  placeholder: 'bg-placeholder-tint/60 text-placeholder',
+  commented: 'bg-commented-tint/60 text-commented',
+  absent: 'text-missing',
+};
+
 /**
  * The raw view is the trust anchor: it shows the file exactly as pasted, with
  * annotations layered on top and never rewriting the text (PRD US-14).
@@ -24,7 +33,7 @@ type Rendered =
  */
 export function RawView({ comparison, texts, parsed, maskValues }: RawViewProps) {
   return (
-    <div className="raw-grid">
+    <div className="grid gap-4 lg:grid-cols-2">
       {comparison.perFile.map((file) => (
         <RawPane
           key={file.fileId}
@@ -61,46 +70,52 @@ function RawPane({
   );
 
   return (
-    <div className="raw-pane">
-      <div className="raw-pane__head">
-        <span>{name}</span>
-        <span className="muted" style={{ marginLeft: 'auto', fontSize: 11.5 }}>
-          read-only
-        </span>
+    <section className="min-w-0 overflow-hidden rounded-lg border border-border bg-card">
+      <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+        <span className="mono truncate text-[13px] font-medium">{name}</span>
+        <span className="ml-auto text-[11px] text-faint">read-only</span>
       </div>
-      <div className="raw-pane__body">
+      <div className="max-h-[560px] overflow-auto py-1.5 scroll-quiet">
         {rendered.map((item, index) =>
           item.kind === 'marker' ? (
-            <div key={`m-${item.key}-${index}`} className="raw-line raw-line--missing">
-              <span className="raw-line__no" aria-hidden="true">
+            <div
+              key={`m-${item.key}-${index}`}
+              className="flex items-center gap-2 border-y border-dashed border-missing/35 bg-missing-tint/50 px-3 py-0.5"
+            >
+              <span className="w-7 shrink-0 text-right text-[11px] text-missing select-none" aria-hidden="true">
                 +
               </span>
-              <span className="raw-line__body mono" style={{ color: 'var(--st-missing)' }}>
-                {item.key}
+              <span className="mono text-[12.5px] text-missing">{item.key}</span>
+              <span className="ml-auto rounded-sm bg-missing/10 px-1.5 text-[10.5px] font-medium tracking-wide text-missing uppercase">
+                missing here
               </span>
-              <span className="raw-line__tag">missing here</span>
             </div>
           ) : (
             <div
               key={`l-${item.number}`}
-              className={`raw-line${item.presence ? ` raw-line--${item.presence}` : ''}`}
+              className={cn(
+                'flex items-baseline gap-2 px-3 py-px',
+                item.presence ? LINE_TONE[item.presence] : 'text-foreground',
+              )}
             >
-              <span className="raw-line__no" aria-hidden="true">
+              <span className="w-7 shrink-0 text-right font-mono text-[11px] text-faint select-none" aria-hidden="true">
                 {item.number}
               </span>
-              <span className="raw-line__body">
+              <span className="mono min-w-0 flex-1 whitespace-pre text-[12.5px]">
                 {maskValues && item.presence && item.presence !== 'commented'
                   ? maskLine(item.text)
                   : item.text || ' '}
               </span>
               {item.presence && item.presence !== 'present' ? (
-                <span className="raw-line__tag">{tagFor(item.presence)}</span>
+                <span className="shrink-0 text-[10.5px] font-medium tracking-wide uppercase opacity-80">
+                  {tagFor(item.presence)}
+                </span>
               ) : null}
             </div>
           ),
         )}
       </div>
-    </div>
+    </section>
   );
 }
 

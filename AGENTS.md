@@ -42,7 +42,9 @@ src/core/       pure TypeScript, no DOM, no React — 100% unit-testable, shared
   patch/        surgical text edits (never rewrite a file wholesale)
   export/       fix block, redacted report, agent prompt
 src/state/      one reducer, derived selectors, no persistence
-src/ui/         React components, pages, design tokens (src/styles/tokens.css)
+src/ui/components/   product components (compose the primitives)
+src/ui/components/ui shadcn/ui primitives, copied source, not a dependency
+src/styles/          tokens.css (palette) + global.css (Tailwind theme)
 tests/          unit/, component/, fixtures/env/ (parser corpus)
 e2e/            Playwright: privacy suites that run in CI, not locally by default
 ```
@@ -55,6 +57,8 @@ e2e/            Playwright: privacy suites that run in CI, not locally by defaul
 - Values are **strings, always**. Never coerce to number or boolean — dotenv does not.
 - Every parser change needs a fixture in `tests/fixtures/env/` **before** the fix, plus its expected JSON.
 - Prefer editing functions that take text + return text (surgical patches). Never regenerate a whole file from a model: comments, ordering, and quoting belong to the user.
+- Styling is Tailwind + shadcn/ui. Use `cn()` for conditional classes and the semantic names (`bg-card`, `text-muted-foreground`, `border-ok/25`). Never hard-code a hex value in a component: it will not follow the theme and the contrast test cannot see it.
+- A new UI dependency is a reviewed change: add it to `REVIEWED_RUNTIME_DEPS` in `scripts/check-privacy.mjs` with a reason and a license, or the build fails.
 - Accessibility is a merge requirement: roles/labels first, `data-testid` never as the only query.
 - Colour is never the only signal for a state — always icon + text.
 - Anything that would store, transmit, or put file content in a URL is out of bounds. `npm run privacy` enforces it; do not add it to the allowlist.
@@ -73,7 +77,7 @@ e2e/            Playwright: privacy suites that run in CI, not locally by defaul
 
 ```bash
 npm run typecheck     # tsc, project-wide
-npm test              # 282 unit + component tests
+npm test              # 320 unit + component tests
 npm run build         # typecheck + production build
 npm run privacy       # storage/network/dependency guard
 npm run check         # all of the above, in the order CI runs them

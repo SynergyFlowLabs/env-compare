@@ -1,12 +1,13 @@
-/* Design tokens. See docs/DESIGN.md for the reasoning and palette table. */
+/*
+ * Theme tokens. See docs/DESIGN.md for the reasoning and palette table.
+ * Static values (type stacks, radii, easing) live in src/styles/global.css,
+ * inside the Tailwind theme. This file is only the part that changes with the
+ * theme, which is what the contrast tests in tests/unit/tokens.test.ts read.
+ */
 
 :root {
   color-scheme: light dark;
 
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'JetBrains Mono', Menlo, Consolas,
-    'Liberation Mono', monospace;
 
   --paper: #f6f6f3;
   --surface: #ffffff;
@@ -38,15 +39,9 @@
   --st-differs: #1f6f8b;
   --st-differs-tint: #e9f4f7;
 
-  --radius-sm: 4px;
-  --radius: 6px;
-  --radius-lg: 10px;
 
   --shadow-panel: 0 1px 0 rgb(21 24 28 / 4%);
-  --max-width: 1180px;
 
-  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
-  --speed: 140ms;
 }
 
 /*
