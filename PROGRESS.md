@@ -308,6 +308,17 @@ two.
 
 **378 tests**, typecheck, build and guard green.
 
+### 2026-10-21 — Metadata shipped
+
+- **PR #2 merged** into `main` (`23c8d97`).
+- **Production redeployed** from `main`: `dpl_3Pkd8qZUcXRa8f6jAhrVxzDVW1m`-series deployment
+  `dpl_3PUkd8qZUcXRa8f6jAhrVxzDVW1m`, READY and PROMOTED, on `envcompare.vercel.app`.
+- Verified live: `/robots.txt` and `/sitemap.xml` serve the new files through the CDN, which is the
+  same filesystem path `index.html` and `og-image.png` take; the CSP, cache headers and rewrites from
+  `vercel.json` all appear in the deployment's compiled routes.
+- Still manual, because the GitHub integration in this sandbox cannot change repository settings
+  (`gh repo edit` → 403): the repo description, topics and social preview upload.
+
 ## Decisions made during implementation
 
 | Date | Decision | Why |
