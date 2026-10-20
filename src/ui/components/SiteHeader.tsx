@@ -1,4 +1,5 @@
 import { PrivacyBadge, Wordmark } from './Brand';
+import { ThemeConsentDialog } from './ThemeConsentDialog';
 import { ThemeSwitch } from './ThemeSwitch';
 
 type Page = 'tool' | 'privacy' | 'about';
@@ -34,6 +35,7 @@ export function SiteHeader({ current }: { current: Page }) {
         <ThemeSwitch />
         {current === 'tool' ? <PrivacyBadge /> : null}
       </div>
+      <ThemeConsentDialog />
     </header>
   );
 }

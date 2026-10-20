@@ -39,7 +39,7 @@ Both pass a naive "does this key exist?" check.
 - **Classifies** every variable in every file: missing · empty · placeholder · commented out · set · set differently.
 - **Shows four views:** a plain-language summary, a row-aligned table with inline editing, the annotated raw text, and a copy-ready fix.
 - **Gives you the fix**, not just the diagnosis: `Copy 3 variables for .env`.
-- **Stays safe with real secrets:** mask values in one click; reports contain key names only.
+- **Stays safe with real secrets:** mask values in one click; reports contain key names only. The only thing this site can remember is your theme, and only with your consent.
 
 Everything happens in a single tab. Close it and the data is gone, because it was never written anywhere.
 
@@ -73,13 +73,14 @@ The privacy promise is not a paragraph in a policy. Each claim has a mechanism, 
 | Promise | Mechanism |
 | --- | --- |
 | Nothing is uploaded | Static site, no backend. Production CSP sets `connect-src 'none'`. |
-| Nothing is stored | No `localStorage`, `sessionStorage`, `IndexedDB`, cookies, cache or service worker. `npm run privacy` fails the build if any appears in `src/`. |
+| Your files are never stored | No `localStorage`, `sessionStorage`, `IndexedDB`, cache or service worker, and no cookie ever holds anything you paste. `npm run privacy` fails the build if any of those APIs appears in `src/`. |
+| One cookie, only if you ask | Choosing Light or Dark once asks whether it may remember the choice in a single cookie, `ec-theme`, whose value is one word. Decline and nothing is written; the guard confines cookie access to one audited file. |
 | No third-party code that reports back | Runtime dependencies are a short, reviewed allowlist (React, Radix primitives for the dialog and tabs, and four small utilities) checked by CI. No fonts CDN, no analytics, no tag manager, no error reporter. |
 | No shareable links | No URL or hash state, so file content can never reach a link, a history entry, or a screenshot of the address bar. |
 | Masking is real | Masked values are removed from the DOM, not hidden with CSS. |
 | Exports are safe | Fix blocks, agent prompts and default reports contain key names only. |
 
-Verify it yourself in about thirty seconds: open DevTools → Network, use the tool, and watch nothing go out. Then check Application → Storage: still empty.
+Verify it yourself in about thirty seconds: open DevTools → Network, use the tool, and watch nothing go out. Then check Application → Storage: Local Storage, Session Storage and IndexedDB are empty, and the only cookie — if you said yes — is `ec-theme`.
 
 The reasoning, the threat model, and the things we explicitly cannot protect you from (extensions, your clipboard, your screen) are in [docs/PRIVACY.md](docs/PRIVACY.md).
 
@@ -119,7 +120,7 @@ docs/PRD.md     the specification, written before the code
 docs/DESIGN.md  palette, type, layout, motion, copy
 docs/PRIVACY.md the long version of the privacy claim
 e2e/            Playwright: no-network, no-storage, masked-DOM, hostile-storage
-tests/          331 unit and component tests, 32 parser fixtures
+tests/          347 unit and component tests, 32 parser fixtures
 AGENTS.md       conventions for humans and AI agents
 PROGRESS.md     build log and decisions
 ```

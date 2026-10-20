@@ -6,7 +6,8 @@
  * README are worth nothing against a `<script>` added in a hurry, so the
  * promise is a build gate instead:
  *
- *   1. no storage / network / tracking APIs in src/
+ *   1. no storage / network / tracking APIs in src/, with exactly one audited
+ *      exception: the theme cookie, confined to src/ui/lib/consent.ts
  *   2. every runtime dependency is on a reviewed allowlist, carries the license
  *      it was reviewed under, and ships no install scripts
  *   3. no third-party origins in the built bundle (except allowlisted link targets)
@@ -22,11 +23,22 @@ const ROOT = process.cwd();
 const failures = [];
 const notes = [];
 
+/**
+ * The one file allowed to touch `document.cookie`, and the only cookie allowed.
+ *
+ * The product used to say "no cookies at all". It now remembers the reader's
+ * theme, but only after they say yes, so the rule is not gone — it is narrowed
+ * to a file that can be read in a minute and checked mechanically here.
+ */
+const COOKIE_MODULE = 'src/ui/lib/consent.ts';
+const COOKIE_NAME = 'ec-theme';
+const COOKIE_ATTRIBUTES = ['Max-Age=', 'Path=/', 'SameSite=Lax'];
+
 const FORBIDDEN = [
   { label: 'localStorage', rx: /\blocalStorage\s*[.[]/ },
   { label: 'sessionStorage', rx: /\bsessionStorage\s*[.[]/ },
   { label: 'indexedDB', rx: /\bindexedDB\s*[.[]/ },
-  { label: 'document.cookie', rx: /document\s*\.\s*cookie/ },
+  { label: 'document.cookie', rx: /document\s*\.\s*cookie/, cookie: true },
   { label: 'cache storage', rx: /\bcaches\s*\.\s*(open|match|keys|delete)\s*\(/ },
   { label: 'service worker', rx: /\bserviceWorker\b/ },
   { label: 'sendBeacon', rx: /\bsendBeacon\b/ },
@@ -90,6 +102,7 @@ for (const file of srcFiles) {
     // names); only flag code that would actually call the API.
     if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
     for (const rule of FORBIDDEN) {
+      if (rule.cookie && relative(ROOT, file) === COOKIE_MODULE) continue;
       if (rule.rx.test(line)) {
         failures.push(
           `${relative(ROOT, file)}:${index + 1} uses ${rule.label}. ` +
@@ -98,6 +111,41 @@ for (const file of srcFiles) {
       }
     }
   });
+}
+
+// --------------------------------------------------------------- cookie check
+
+const cookiePath = join(ROOT, COOKIE_MODULE);
+if (!existsSync(cookiePath)) {
+  failures.push(`${COOKIE_MODULE} is missing, but the theme cookie policy expects it to exist.`);
+} else {
+  const cookieSource = readFileSync(cookiePath, 'utf8');
+  // Only the assignments matter: the file's comments quote the attributes while
+  // explaining them, and a comment must not be able to satisfy this check.
+  const assignments =
+    cookieSource.match(/document\.cookie\s*=\s*`[^`]*`/g) ??
+    [];
+  if (assignments.length === 0) {
+    failures.push(`${COOKIE_MODULE}: expected the theme cookie to be written with a template literal.`);
+  }
+  for (const assignment of assignments) {
+    for (const attribute of COOKIE_ATTRIBUTES) {
+      if (!assignment.includes(attribute)) {
+        failures.push(
+          `${COOKIE_MODULE}: "${assignment.trim()}" is missing ${attribute}. A functional cookie without it is a tracking cookie waiting to happen.`,
+        );
+      }
+    }
+    if (!assignment.includes('${THEME_COOKIE}')) {
+      failures.push(
+        `${COOKIE_MODULE}: "${assignment.trim()}" must be named by the THEME_COOKIE constant, not a literal or a computed value.`,
+      );
+    }
+  }
+  if (!cookieSource.includes(`'${COOKIE_NAME}'`)) {
+    failures.push(`${COOKIE_MODULE} must name the cookie ${COOKIE_NAME}.`);
+  }
+  notes.push(`cookie: ${COOKIE_NAME} only, confined to ${COOKIE_MODULE}, written after consent`);
 }
 
 // ------------------------------------------------------------------- deps scan
