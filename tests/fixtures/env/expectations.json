@@ -1,0 +1,284 @@
+{
+  "basic.env": {
+    "keys": [
+      "A",
+      "B",
+      "C"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "bom.env": {
+    "keys": [
+      "A",
+      "B"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "colon.no.space.env": {
+    "keys": [
+      "B"
+    ],
+    "commented": [],
+    "diagnostics": [
+      "COLON_NO_SPACE"
+    ]
+  },
+  "colon.separator.env": {
+    "keys": [
+      "A",
+      "B"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "commented.keys.env": {
+    "keys": [
+      "LIVE"
+    ],
+    "commented": [
+      "SENTRY_DSN",
+      "GOOGLE_ID"
+    ],
+    "diagnostics": []
+  },
+  "crlf.env": {
+    "keys": [
+      "A",
+      "B",
+      "C"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "docker.compose.style.env": {
+    "keys": [
+      "POSTGRES_USER",
+      "POSTGRES_PASSWORD",
+      "POSTGRES_DB"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "dollar.refs.env": {
+    "keys": [
+      "HOST",
+      "PORT",
+      "URL",
+      "ECHO",
+      "MISSING"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "dots.dashes.env": {
+    "keys": [
+      "sentry.trace-sample-rate",
+      "my-key",
+      "my.key"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "duplicates.env": {
+    "keys": [
+      "A",
+      "B"
+    ],
+    "commented": [],
+    "diagnostics": [
+      "DUP_KEY",
+      "DUP_KEY"
+    ]
+  },
+  "empty.env": {
+    "keys": [],
+    "commented": [],
+    "diagnostics": []
+  },
+  "empty.values.env": {
+    "keys": [
+      "EMPTY",
+      "EMPTY_QUOTED",
+      "EMPTY_SPACES",
+      "FILLED"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "export.prefix.env": {
+    "keys": [
+      "A",
+      "B",
+      "C"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "hash.in.value.env": {
+    "keys": [
+      "PASSWORD",
+      "TOKEN"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "hash.unquoted.env": {
+    "keys": [
+      "PASSWORD"
+    ],
+    "commented": [],
+    "diagnostics": [
+      "SUSPECT_HASH_TRUNCATION"
+    ]
+  },
+  "inline.comment.env": {
+    "keys": [
+      "A",
+      "B",
+      "C"
+    ],
+    "commented": [],
+    "diagnostics": [
+      "SUSPECT_HASH_TRUNCATION"
+    ]
+  },
+  "multiline.crlf.env": {
+    "keys": [
+      "MULTI",
+      "NEXT"
+    ],
+    "commented": [],
+    "diagnostics": [
+      "MULTILINE"
+    ]
+  },
+  "multiline.pem.env": {
+    "keys": [
+      "PRIVATE_KEY",
+      "AFTER"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "multiline.raw.env": {
+    "keys": [
+      "MULTI",
+      "NEXT"
+    ],
+    "commented": [],
+    "diagnostics": [
+      "MULTILINE"
+    ]
+  },
+  "no.equals.env": {
+    "keys": [
+      "GOOD"
+    ],
+    "commented": [],
+    "diagnostics": [
+      "PARSE_NO_VALUE",
+      "PARSE_NO_VALUE"
+    ]
+  },
+  "numbers.keys.env": {
+    "keys": [
+      "1KEY",
+      "2"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "only.comments.env": {
+    "keys": [],
+    "commented": [],
+    "diagnostics": []
+  },
+  "placeholder.values.env": {
+    "keys": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "python.dotenv.style.env": {
+    "keys": [
+      "FLASK_APP",
+      "DEBUG",
+      "SQLALCHEMY_DATABASE_URI"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "quotes.backtick.env": {
+    "keys": [
+      "A"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "quotes.double.env": {
+    "keys": [
+      "A",
+      "B"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "quotes.escaped.env": {
+    "keys": [
+      "A",
+      "B"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "quotes.single.env": {
+    "keys": [
+      "A",
+      "B"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "spaces.in.key.env": {
+    "keys": [
+      "GOOD"
+    ],
+    "commented": [],
+    "diagnostics": [
+      "PARSE_BAD_KEY",
+      "PARSE_BAD_KEY"
+    ]
+  },
+  "tabs.env": {
+    "keys": [
+      "A",
+      "B"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "trailing.whitespace.env": {
+    "keys": [
+      "A",
+      "B",
+      "C"
+    ],
+    "commented": [],
+    "diagnostics": []
+  },
+  "unicode.values.env": {
+    "keys": [
+      "GREETING",
+      "CITY"
+    ],
+    "commented": [],
+    "diagnostics": []
+  }
+}
