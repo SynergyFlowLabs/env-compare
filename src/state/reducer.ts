@@ -142,6 +142,7 @@ export function reducer(state: AppState, action: Action): AppState {
         filter: 'all',
         revealed: [],
         undo: [],
+        autoAdvance: true,
       };
 
     case 'clearAll':
