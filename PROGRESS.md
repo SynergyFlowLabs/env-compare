@@ -21,8 +21,8 @@ Implementation tracker for EnvCompare. The plan comes from [docs/PRD.md](docs/PR
 | 8 | UI: summary + table (aligned, ghost cells, filters, states) | §10.3 | ✅ done |
 | 9 | UI: raw view, fix panel, report panel, masking | §10.3, §13.6 | ✅ done |
 | 10 | Privacy layer: CSP headers, CI guard script, `/privacy` page | §13 | ✅ done |
-| 11 | Component + e2e tests, a11y pass | §16 | 🟡 component tests done · e2e written, runs in CI · a11y pass pending |
-| 12 | Docs & launch artefacts: README demo, CONTRIBUTING, SECURITY, templates, LICENSE | §15 | 🟡 in progress |
+| 11 | Component + e2e tests, a11y pass | §16 | ✅ 281 tests · e2e suites in CI · a11y pass done |
+| 12 | Docs & launch artefacts: README demo, CONTRIBUTING, SECURITY, templates, LICENSE | §15 | ✅ done |
 
 ---
 
@@ -112,6 +112,13 @@ Findings worth flagging to reviewers:
 1. **React DOM ships a `fetch` call.** Its resource-preload helper (`fetch(e.href, n)`) is in the bundle and is unreachable here (we never render a preload `<link>`), and `connect-src 'none'` blocks it anyway. Rather than weaken the promise, the guard strips *that exact call* and fails on any other `fetch(` — plus React lands in its own `vendor` chunk so the app chunk is provably request-free. This is the kind of thing a "we don't phone home" README would never have told you.
 2. **No browser available in this sandbox.** Chromium downloads are blocked and the Lambda build of Chromium lacks system libs (`libnspr4`), so no screenshots or Playwright runs here. UI behaviour is covered by 11 jsdom + Testing Library tests (paste → results, add/undo, filters, masking, copy + clipboard fallback, raw view). The Playwright suite (`e2e/`) is written and wired into CI, not executed locally.
 3. **`frame-ancestors` is deliberately omitted** from the production CSP, against the PRD's draft. There is nothing to clickjack — no session, no cookies, no destructive server action — and blocking embedding would prevent legitimate demos. Recorded below.
+
+### 2026-10-20 — Steps 11–12: tests, CI and launch documents
+
+- **E2E suites** (`e2e/`, `playwright.config.ts`): no request after load, no storage writes, empty after reload, still works when `Storage.prototype.setItem` throws, and the core paste → missing → add-a-key journey. Wired into `.github/workflows/ci.yml` alongside typecheck, unit tests, build and the privacy guard. A browser cannot be installed in this sandbox, so these run in CI; the same behaviours are covered by jsdom tests locally.
+- **Documents**: `CONTRIBUTING.md` (privacy invariants stated as non-negotiable, parser changes test-first), `SECURITY.md` (private reporting, scope, what is out of scope), `docs/PRIVACY.md` (mechanism per promise, a 30-second DevTools verification, threat model, and an explicit list of what the tool cannot protect you from), `CODE_OF_CONDUCT.md`, MIT `LICENSE` (with dotenv attribution), issue templates (parser edge case requires a fake-value reproduction), PR template, `favicon.svg`, Open Graph tags.
+- **README** rewritten for a shipped product rather than a specification, with an honest limits section instead of a marketing claim.
+- Test count corrected in the copy: the PRD's "60+ fixtures" target is **32 fixtures today**; the README says what exists, not what was planned.
 
 ---
 
