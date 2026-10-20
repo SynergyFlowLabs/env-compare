@@ -77,6 +77,20 @@ The practical rules that follow:
 - shadcn defaults were tuned down (32px control height, 13px control text) to keep the density this
   document asks for; the component APIs are unchanged, so upstream snippets still paste in.
 
+### More than two files
+
+The layout treats 2 files as the common case and N as a first-class one:
+
+- Input: a two-column grid that becomes three columns from three boxes up, with the "Add another
+  file" tile in the same grid so the affordance is where the next box will appear.
+- Each non-reference box carries a pin (use as reference) and a bin (remove), both icon buttons with
+  labels; the bin disappears at the two-file floor.
+- Results: the table grows a column per file and scrolls horizontally; the raw view reflows to three
+  columns only on very wide screens, because two files side by side is already the limit for reading
+  two texts in parallel.
+- The Fix tab carries a target selector once there is more than one target, and the primary copy
+  button in the results bar follows the same selection — one idea of "the file I am fixing", not two.
+
 ### Theme selection
 
 Three explicit choices in the header — **Auto** (follow the OS, the default), **Light**, **Dark** — as segmented buttons with `aria-pressed`. Not a two-state toggle, because "follow my OS" is a real preference that a toggle silently discards.

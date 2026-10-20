@@ -1,5 +1,5 @@
-import { useRef, useState, type ChangeEvent, type DragEvent } from 'react';
-import { FileText, FileUp, Pencil, Upload, X } from 'lucide-react';
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
+import { FileText, FileUp, Pencil, Pin, Trash2, Upload, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -19,6 +19,13 @@ interface FilePaneProps {
   /** Called for a paste, which is allowed to advance to the results view. */
   onPaste: (text: string) => void;
   onName: (name: string) => void;
+  /** Promote this file to the reference. Hidden on the reference itself. */
+  onMakeReference?: () => void;
+  /** Remove this box entirely. Hidden when only the minimum are left. */
+  canRemove?: boolean;
+  onRemove?: () => void;
+  /** A freshly added box should be ready to type into. */
+  autoFocusName?: boolean;
   onProblem: (message: string) => void;
 }
 
@@ -32,6 +39,10 @@ export function FilePane({
   onText,
   onPaste,
   onName,
+  onMakeReference,
+  canRemove = false,
+  onRemove,
+  autoFocusName = false,
   onProblem,
 }: FilePaneProps) {
   const [dragging, setDragging] = useState(false);
@@ -39,6 +50,14 @@ export function FilePane({
   const pasting = useRef(false);
   const pickerRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
+
+  // A box added a moment ago: put the cursor in its name so the reader can
+  // label it before pasting, and select the suggested name so typing replaces it.
+  useEffect(() => {
+    if (!autoFocusName) return;
+    nameRef.current?.focus();
+    nameRef.current?.select();
+  }, [autoFocusName]);
 
   const readFile = async (file: File) => {
     if (file.size > MAX_BYTES) {
@@ -158,8 +177,36 @@ export function FilePane({
             reference
           </span>
         ) : (
-          <span className="ml-auto shrink-0 text-[11px] text-faint">target</span>
+          <>
+            <span className="ml-auto shrink-0 text-[11px] text-faint">target</span>
+            {onMakeReference ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-6 shrink-0 text-faint hover:text-foreground"
+                aria-label={`Use ${name || 'this file'} as the reference`}
+                title="Use this file as the reference"
+                onClick={onMakeReference}
+              >
+                <Pin aria-hidden="true" />
+              </Button>
+            ) : null}
+          </>
         )}
+        {canRemove && onRemove ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-6 shrink-0 text-faint hover:text-missing"
+            aria-label={`Remove ${name || 'this file'}`}
+            title="Remove this file"
+            onClick={onRemove}
+          >
+            <Trash2 aria-hidden="true" />
+          </Button>
+        ) : null}
       </div>
 
       <Textarea

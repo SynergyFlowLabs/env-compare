@@ -13,13 +13,21 @@ import {
   Trash2,
   Wrench,
   FileCode2,
+  FilePlus2,
   LayoutList,
 } from 'lucide-react';
 import { compare, type Bucket, type Comparison, type FileInput } from '../../core/compare';
 import { parseEnvFile } from '../../core/parse';
 import { buildFixBlock } from '../../core/export';
 import { countLines } from '../../core/parse';
-import { reducer, initialState, type ExportKind, type Tab } from '../../state/reducer';
+import {
+  reducer,
+  initialState,
+  MAX_FILES,
+  MIN_FILES,
+  type ExportKind,
+  type Tab,
+} from '../../state/reducer';
 import { copyText, downloadText, safeFileName } from '../lib/clipboard';
 import { cn } from '../lib/utils';
 import { FilePane } from '../components/FilePane';
@@ -72,21 +80,28 @@ export function Tool() {
   }, [state.files, state.referenceId, parsed]);
 
   const referenceFile = state.files.find((f) => f.id === state.referenceId) ?? state.files[0]!;
-  const targetFile = state.files.find((f) => f.id !== state.referenceId) ?? state.files[1]!;
-  const targetSummary = comparison.perFile.find((f) => f.fileId === targetFile.id);
+  const targets = state.files.filter((f) => f.id !== state.referenceId);
+  /**
+   * The target the Fix tab and the primary copy button act on. With two files
+   * there is only one; with more, the reader picks, and the choice survives
+   * edits until that file is removed.
+   */
+  const activeTarget =
+    targets.find((f) => f.id === state.activeTargetId) ?? targets[0] ?? state.files[1] ?? state.files[0]!;
   const referenceSummary = comparison.perFile.find((f) => f.fileId === referenceFile.id);
 
+  const hasKeys = (summary: (typeof comparison.perFile)[number] | undefined) =>
+    (summary?.counts.present ?? 0) +
+      (summary?.counts.empty ?? 0) +
+      (summary?.counts.placeholder ?? 0) +
+      (summary?.counts.commented ?? 0) >
+    0;
+
+  // Ready when the reference has variables and at least one target does too.
+  // Waiting for *every* box would make a half-filled comparison unreachable.
   const bothHaveKeys =
-    (referenceSummary?.counts.present ?? 0) +
-      (referenceSummary?.counts.empty ?? 0) +
-      (referenceSummary?.counts.placeholder ?? 0) +
-      (referenceSummary?.counts.commented ?? 0) >
-      0 &&
-    (targetSummary?.counts.present ?? 0) +
-      (targetSummary?.counts.empty ?? 0) +
-      (targetSummary?.counts.placeholder ?? 0) +
-      (targetSummary?.counts.commented ?? 0) >
-      0;
+    hasKeys(referenceSummary) &&
+    targets.some((target) => hasKeys(comparison.perFile.find((f) => f.fileId === target.id)));
 
   /**
    * Paste is a deliberate act: once both sides have variables, show the result.
@@ -172,8 +187,8 @@ export function Tool() {
   const texts = useMemo(() => new Map(state.files.map((f) => [f.id, f.text])), [state.files]);
 
   const fixBlock = useMemo(
-    () => buildFixBlock(comparison, targetFile.id),
-    [comparison, targetFile.id],
+    () => buildFixBlock(comparison, activeTarget.id),
+    [comparison, activeTarget.id],
   );
 
   const problems = comparison.summary.missing + comparison.summary.needsValue;
@@ -194,26 +209,51 @@ export function Tool() {
             </h1>
             <p className="mt-3 max-w-[64ch] text-[16px] text-muted-foreground">
               Paste your <code className="mono">.env.example</code> and your{' '}
-              <code className="mono">.env</code>. This shows every variable that is missing, empty,
-              or leftover — and gives you the block to paste back.
+              <code className="mono">.env</code> — then add{' '}
+              <code className="mono">.env.local</code>, <code className="mono">.env.staging</code>{' '}
+              or anything else you keep. This shows every variable that is missing, empty, or
+              leftover in each file, and gives you the block to paste back.
             </p>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
-              {state.files.map((file) => (
+            <div
+              className={cn(
+                'mt-8 grid gap-4',
+                state.files.length > 2 ? 'md:grid-cols-2 xl:grid-cols-3' : 'md:grid-cols-2',
+              )}
+            >
+              {state.files.map((file, index) => (
                 <FilePane
                   key={file.id}
                   id={file.id}
                   name={file.name}
                   text={file.text}
                   isReference={file.id === state.referenceId}
+                  canRemove={state.files.length > MIN_FILES}
                   keyCount={parsed.get(file.id)?.effective.size ?? 0}
                   lineCount={countLines(file.text)}
                   onText={(text) => dispatch({ type: 'text', id: file.id, text })}
                   onPaste={(text) => dispatch({ type: 'paste', id: file.id, text })}
                   onName={(name) => dispatch({ type: 'name', id: file.id, name })}
+                  onMakeReference={() => dispatch({ type: 'reference', id: file.id })}
+                  onRemove={() => dispatch({ type: 'removeFile', id: file.id })}
                   onProblem={(message) => dispatch({ type: 'toast', message })}
+                  autoFocusName={index >= 2}
                 />
               ))}
+
+              {state.files.length < MAX_FILES ? (
+                <button
+                  type="button"
+                  onClick={() => dispatch({ type: 'addFile' })}
+                  className="flex min-h-[120px] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-4 py-6 text-[13px] text-muted-foreground transition-colors hover:border-ring hover:bg-brand-soft/40 hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/30 focus-visible:outline-none"
+                >
+                  <FilePlus2 className="size-4" aria-hidden="true" />
+                  <span className="font-medium">Add another file</span>
+                  <span className="text-[11.5px]">
+                    .env.local, .env.staging, .env.production — up to {MAX_FILES}
+                  </span>
+                </button>
+              ) : null}
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px]">
@@ -236,7 +276,8 @@ export function Tool() {
                 variant="link"
                 className="h-auto px-0 text-[13px]"
                 onClick={() => dispatch({ type: 'swapRoles' })}
-                disabled={!referenceFile.text && !targetFile.text}
+                disabled={state.files.every((file) => file.text.trim() === '')}
+                title="Use the next file as the reference"
               >
                 <ArrowLeftRight aria-hidden="true" />
                 Swap which file is the reference
@@ -260,7 +301,10 @@ export function Tool() {
                 Edit files
               </Button>
               <span className="mono text-[12.5px] text-muted-foreground">
-                {referenceFile.name} → {targetFile.name}
+                {referenceFile.name} →{' '}
+                {targets.length === 1
+                  ? targets[0]!.name
+                  : `${targets.length} files (${targets.map((t) => t.name).join(', ')})`}
               </span>
               <span className="flex-1" />
               {fixBlock.keys.length > 0 ? (
@@ -271,7 +315,7 @@ export function Tool() {
                   }
                 >
                   <Copy aria-hidden="true" />
-                  Copy {fixBlock.keys.length} for {targetFile.name}
+                  Copy {fixBlock.keys.length} for {activeTarget.name}
                 </Button>
               ) : null}
               <Button
@@ -283,7 +327,12 @@ export function Tool() {
                 {state.maskValues ? <Eye aria-hidden="true" /> : <EyeOff aria-hidden="true" />}
                 {state.maskValues ? 'Show values' : 'Hide values'}
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => dispatch({ type: 'swapRoles' })}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => dispatch({ type: 'swapRoles' })}
+                title="Use the next file as the reference"
+              >
                 <ArrowLeftRight aria-hidden="true" />
                 Swap
               </Button>
@@ -435,9 +484,10 @@ export function Tool() {
               <TabsContent value="fix" className="mt-1">
                 <FixPanel
                   comparison={comparison}
-                  targetId={targetFile.id}
-                  targetName={targetFile.name}
-                  targetText={targetFile.text}
+                  targets={targets.map((file) => ({ id: file.id, name: file.name }))}
+                  activeTargetId={activeTarget.id}
+                  onTargetChange={(id) => dispatch({ type: 'target', id })}
+                  targetText={activeTarget.text}
                   onCopy={(text, label) => void copy(text, label)}
                   onExport={(kind, text, done) => void copyAndShow(kind, text, done)}
                   onDownload={(filename, text) => {

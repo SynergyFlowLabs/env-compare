@@ -62,7 +62,7 @@ Four views over one shared model: **Summary** (plain language), **Table** (row-a
 | No third-party code | No analytics, no CDN fonts, no tag managers; dependency allowlist checked in CI |
 | No shareable links | No URL or hash state — file content can never leak into a link, a browser history entry, or a screenshot of the address bar |
 
-**MVP = two files, one page, four views, no backend** — roughly 4–5 weeks of part-time work for one maintainer ([§17](#17-delivery-plan)). Multiple-file matrix comparison lands in v1.1; the data model supports it from day one.
+**MVP = two to eight files, one page, four views, no backend** — roughly 4–5 weeks of part-time work for one maintainer ([§17](#17-delivery-plan)). Two files is the common case and the one the default layout is tuned for; more than two is a first-class mode rather than a later addition, because the question ("what is missing from *this* file?") does not change with the file count. **Amended 2026-10-20:** the N-file matrix moved from v1.1 into v1.0; see §3.1 and §7.2.
 
 ---
 
@@ -84,7 +84,9 @@ So every variable gets a per-file state: `present` · `empty` · `placeholder` �
 
 ### R3. From "2 files" to **N files with an explicit reference**
 
-`.env.local`, `.env.production`, `.env.staging` are routine. The model is: **one reference file** (the schema — usually `.env.example`) compared against **one or more targets**. Two targets render as aligned side-by-side columns; three or more render as a key × file matrix. The reference file is auto-detected by filename and always switchable in one click.
+`.env.local`, `.env.production`, `.env.staging` are routine, and a monorepo can have a handful of them. The model is: **one reference file** (the schema — usually `.env.example`) compared against **one or more targets**, up to eight boxes in total. Every file gets its own column in the table and its own counts in the summary; the fix block and the agent prompt act on one chosen target at a time. The reference file is auto-detected by filename and always switchable in one click — pin a box, or let "Swap" cycle through them.
+
+**Amended 2026-10-20:** this was originally scoped for v1.1. It moved into v1.0 because the engine's data model (`Comparison.perFile`, `cells[]` per row) was already N-file, so the pair-shaped code was all in the interface. See §7.2 and `PROGRESS.md`.
 
 ### R4. Secret-safety is a first-class feature, not a disclaimer
 
@@ -298,8 +300,8 @@ Everything below is **in**. Anything not listed is out.
 
 | Area | Included in v1.0 |
 | --- | --- |
-| Input | 2 files, each with an editable filename label; paste into a textarea; drag-drop a single file; "Load sample"; "Clear" |
-| Detection | Auto-detect reference vs target by filename; manual swap; comparison auto-runs (debounced) |
+| Input | **2–8 files**, each with an editable filename label; paste into a textarea; drag-drop a single file; add/remove a box; pin any box as the reference; "Load sample"; "Clear" |
+| Detection | Auto-detect reference vs target by filename; manual pin or swap (cycles through the boxes); comparison auto-runs (debounced) |
 | Parsing | dotenv-compatible lossless parse with diagnostics (see [§12](#12-parsing-and-comparison-specification-normative)) |
 | Analysis | Per-file states: absent / empty / placeholder / commented / present; row-level "set differently"; duplicate detection; interpolation-reference validation; per-file counts |
 | Views | **Summary** (plain-language), **Table** (row-aligned, colour-coded, editable), **Raw** (annotated, scroll-synced), **Fix** (generated block) |
@@ -307,11 +309,11 @@ Everything below is **in**. Anything not listed is out.
 | Safety | No upload, no storage, no analytics; CSP; `/privacy` verification page; secret-shape detection for masking |
 | A11y | WCAG 2.2 AA; colour never the only signal; full keyboard path; screen-reader table semantics |
 | Quality | 60+ parser fixtures, unit + component + e2e tests, CI guards |
+| Files | 2–8 env files per comparison, one reference and N targets |
 | OSS | README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, issue/PR templates, LICENSE, CI, Vercel deploy |
 
 ### 7.2 v1.1 — fast follow (2–4 weeks after launch)
 
-- **N-file matrix** (3+ targets), reference switchable per column.
 - **Framework presets** (Next.js / Vite / Node-dotenv / Docker Compose / Python) with prefix lint.
 - **AI handoff prompt** (keys only) and "report as PR comment" format.
 - **Requirement annotations**: honour `# required` / `# optional` comments and `# SECRET` hints in `.env.example`.
@@ -760,7 +762,7 @@ Numbered for traceability. **M** = must (P0), **S** = should (P1), **C** = could
 | FR-24 | Clear-all with confirmation | M | Wipes state, DOM, and undo stack; focus returns to the first input |
 | FR-25 | Diagnostics for oversized input | M | Soft warn > 256 KB or > 2,000 keys; hard block > 2 MB |
 | FR-26 | Keyboard shortcuts + shortcut sheet | S | Documented, discoverable, non-conflicting |
-| FR-27 | N-file matrix (3+) | C | Reference pinned; per-column counts |
+| FR-27 | N-file comparison (2–8 files) | **M** | ✅ v1.0 — one reference, N target columns, per-file counts, per-target fix block |
 | FR-28 | AI handoff prompt (keys only) | C | Snapshot test asserts no values are present |
 | FR-29 | Framework presets + prefix lint | C | Presets only change warnings, never how values are parsed |
 | FR-30 | i18n string catalogue | S | All UI strings via `t()`; only `en.ts` in v1 |

@@ -22,7 +22,8 @@ Implementation tracker for EnvCompare. The plan comes from [docs/PRD.md](docs/PR
 | 9 | UI: raw view, fix panel, report panel, masking | §10.3, §13.6 | ✅ done |
 | 10 | Privacy layer: CSP headers, CI guard script, `/privacy` page | §13 | ✅ done |
 | 10b | Light / dark theme selection, without persistence | §10.2, DESIGN | ✅ done |
-| 11 | Component + e2e tests, a11y pass | §16 | ✅ 320 tests · e2e suites in CI · skip link + focus path |
+| 11 | Component + e2e tests, a11y pass | §16 | ✅ 365 tests · e2e suites in CI · skip link + focus path |
+| 11b | N-file comparison (2–8 boxes, reference picker, per-target fix) | §11, US-03 | ✅ done |
 | 13 | shadcn/ui + Tailwind migration | DESIGN | ✅ done |
 | 12 | Docs & launch artefacts: README demo, CONTRIBUTING, SECURITY, templates, LICENSE | §15 | ✅ done |
 
@@ -251,6 +252,36 @@ negative test in the log below.
 
 **347 tests**, typecheck, build and guard green.
 
+### 2026-10-20 — Comparing more than two files
+
+The engine already accepted `FileInput[]`; the interface was the thing that assumed a pair. Closed
+that gap:
+
+- **Boxes, 2 to 8.** "Add another file" sits in the same grid as the boxes, suggests the first unused
+  name (`.env.local`, `.env.production`, `.env.staging`…), and focuses the new name field so it can be
+  relabelled before pasting. Each box can pin itself as the reference or be removed; the remove control
+  disappears at the two-file floor.
+- **One reference, N targets.** The results bar names them (`3 files (.env, .env.local, .env.staging)`),
+  every table column is a file, and the summary line already read `… missing from .env and .env.local`.
+- **One active target.** The Fix tab gains a file selector once there is more than one target, and the
+  results-bar "Copy N for …" button follows the same choice — the reader has one idea of "the file I am
+  fixing", so the interface does not get to have two.
+- **Clear all keeps the layout.** Clearing empties the boxes but keeps how many there are; ids stay monotonic so "Add another file" cannot mint a duplicate.
+- **Roles are explicit.** Pinning a box as reference overrides the filename heuristic instead of being
+  second-guessed on the next rename, and "Swap" now cycles rather than flipping a pair.
+
+Two bugs found while testing, both from assumptions that stopped being true at three files:
+
+1. `addFile` re-armed auto-advance, so adding a box bounced straight back to the results — the same
+   class of bug as "Edit files", fixed the same way: adding is an edit, the paste that follows is what
+   advances.
+2. `clearAll` reset the id counter while keeping the extra boxes, so the next "Add another file" would
+   have minted a duplicate id. Ids are now monotonic for the life of the tab.
+
+**365 tests**, including 11 reducer tests and 7 component tests for the whole flow: add, rename, paste,
+compare three columns, switch the fix target, pin a reference, remove a box, and refuse to drop below
+two.
+
 ---
 
 ## Decisions made during implementation
@@ -275,6 +306,8 @@ negative test in the log below.
 | 2026-10-20 | Tokens stay the only colour source; shadcn's semantic names are mapped onto them | Otherwise two palettes drift and the contrast test stops covering what ships |
 | 2026-10-20 | shadcn components are vendored, not installed as a design-system package | They are source here; upgrading is a deliberate diff, not a lockfile change |
 | 2026-10-20 | Line icons replace the typographic state glyphs | The glyphs depended on the reader's font and drifted in weight; the icon+word rule they served is unchanged |
+| 2026-10-20 | N files, with one reference and a per-target fix panel | The question "what is missing from which file" is the same at 2 and at 6; the engine already took a list, only the interface assumed a pair |
+| 2026-10-20 | Adding a box does not advance to the results | Adding is an edit; the paste that follows re-arms the comparison — the same lesson as the "Edit files" bug, in a new place |
 | 2026-10-20 | One `ExportDialog` for prompt and report, keyed by `kind` | Two exports with the same interaction should not drift; the prompt version was the special case |
 | 2026-10-20 | A consented theme cookie replaces "no cookies at all" | The claim that survived is the one that matters — no file content is stored — and the exception is one file, one name, one value domain, enforced by the guard |
 | 2026-10-20 | Consent is asked at the action, not on load | A banner on load is the pattern the design brief rules out; a question at the moment of the action can explain itself and "no" costs nothing |
