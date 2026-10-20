@@ -1,0 +1,132 @@
+@import './tokens.css';
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/*
+ * Tailwind theme.
+ *
+ * Two layers of naming on purpose:
+ *
+ *  - shadcn's semantic names (background, card, primary, muted, border…) drive
+ *    every component in src/ui/components/ui/. They are what makes a copied
+ *    shadcn component look native here without editing it.
+ *  - the six comparison states keep their own names (missing, empty,
+ *    placeholder, commented, ok, differs) because "destructive" cannot express
+ *    "commented out", and flattening them into one red would lose information.
+ *
+ * All of it resolves to the palette in tokens.css, so the light/dark switch and
+ * the contrast tests still have one source of truth.
+ */
+@theme inline {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-mono:
+    ui-monospace, 'SF Mono', 'Cascadia Mono', 'JetBrains Mono', Menlo, Consolas,
+    'Liberation Mono', monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--on-accent);
+  --color-secondary: var(--surface-sunken);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--surface-sunken);
+  --color-muted-foreground: var(--ink-soft);
+  --color-accent: var(--surface-sunken);
+  --color-accent-foreground: var(--ink);
+  --color-destructive: var(--st-missing);
+  --color-destructive-foreground: var(--on-state);
+  --color-border: var(--line);
+  --color-input: var(--line-strong);
+  --color-ring: var(--focus);
+  --color-faint: var(--ink-faint);
+  --color-brand-soft: var(--accent-tint);
+
+  --color-missing: var(--st-missing);
+  --color-missing-tint: var(--st-missing-tint);
+  --color-empty: var(--st-empty);
+  --color-empty-tint: var(--st-empty-tint);
+  --color-placeholder: var(--st-placeholder);
+  --color-placeholder-tint: var(--st-placeholder-tint);
+  --color-commented: var(--st-commented);
+  --color-commented-tint: var(--st-commented-tint);
+  --color-ok: var(--st-ok);
+  --color-ok-tint: var(--st-ok-tint);
+  --color-differs: var(--st-differs);
+  --color-differs-tint: var(--st-differs-tint);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    background: var(--color-background);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Tailwind v4's preflight leaves buttons with the default cursor. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  /*
+   * Lucide ships stroke-width="2" as a presentation attribute. 1.75 is the
+   * house weight: crisp at 14px, less shouty at 20px, and consistent across
+   * every icon because it is set once here rather than per import.
+   */
+  svg.lucide {
+    stroke-width: 1.75;
+  }
+
+  ::selection {
+    background: var(--accent-tint);
+    color: var(--ink);
+  }
+
+  h1,
+  h2,
+  h3,
+  p,
+  li {
+    text-wrap: pretty;
+  }
+}
+
+@utility mono {
+  font-family: var(--font-mono);
+}
+
+/* The scrollbar on a long file is part of the interface; keep it quiet. */
+@utility scroll-quiet {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}

@@ -1,0 +1,30 @@
+name: Feature request
+description: An idea that does not break the privacy model.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before you write: the project will not add storage, accounts, a backend, analytics,
+        or shareable links. That is the product, not a preference. See the PRD's non-goals.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem you are trying to solve
+      description: Describe the situation, not the solution. What were you doing when this got in your way?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like to see
+  - type: dropdown
+    id: privacy
+    attributes:
+      label: Does this require anything to be stored or sent?
+      options:
+        - "No — it works entirely from what is pasted"
+        - "Yes — and I know that is out of scope"
+        - "Not sure"
+    validations:
+      required: true

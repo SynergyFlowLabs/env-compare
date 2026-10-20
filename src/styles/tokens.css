@@ -1,0 +1,128 @@
+/*
+ * Theme tokens. See docs/DESIGN.md for the reasoning and palette table.
+ * Static values (type stacks, radii, easing) live in src/styles/global.css,
+ * inside the Tailwind theme. This file is only the part that changes with the
+ * theme, which is what the contrast tests in tests/unit/tokens.test.ts read.
+ */
+
+:root {
+  color-scheme: light dark;
+
+
+  --paper: #f6f6f3;
+  --surface: #ffffff;
+  --surface-sunken: #efefe9;
+  --ink: #15181c;
+  --ink-soft: #5a616b;
+  --ink-faint: #666c75;
+  --line: #d7d8d2;
+  --line-strong: #b9bab3;
+  --accent: #2c46c8;
+  --accent-ink: #1d2f96;
+  --accent-tint: #eaedfb;
+  --focus: #2c46c8;
+
+  /* Text on a filled accent or state background, not on the page. */
+  --on-accent: #ffffff;
+  --on-state: #ffffff;
+
+  --st-missing: #c0392f;
+  --st-missing-tint: #fdeeec;
+  --st-empty: #9a5b00;
+  --st-empty-tint: #fdf3e3;
+  --st-placeholder: #6b4fa1;
+  --st-placeholder-tint: #f4f0fb;
+  --st-commented: #666b72;
+  --st-commented-tint: #f1f1ef;
+  --st-ok: #2f6b4f;
+  --st-ok-tint: #eaf4ee;
+  --st-differs: #1f6f8b;
+  --st-differs-tint: #e9f4f7;
+
+
+  --shadow-panel: 0 1px 0 rgb(21 24 28 / 4%);
+
+}
+
+/*
+ * Dark palette — declared twice on purpose.
+ *
+ * Once for the operating system's preference, and once for a theme the reader
+ * picked explicitly. A forced light choice has to win over a dark OS, which a
+ * plain media query cannot express, so the media rule carries :not([data-theme='light']).
+ * CSS has no way to define a selector list across a media boundary without
+ * repeating the declarations, so the blocks below are identical. They must stay
+ * that way: tests/unit/tokens.test.ts parses this file and fails if they drift.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #101215;
+    --surface: #171a1f;
+    --surface-sunken: #1c2026;
+    --ink: #e8e9e6;
+    --ink-soft: #a0a6af;
+    --ink-faint: #858d97;
+    --line: #2a2e35;
+    --line-strong: #3a404a;
+    --accent: #7d93ff;
+    --accent-ink: #a9b8ff;
+    --accent-tint: #1b2140;
+    --focus: #7d93ff;
+
+    --on-accent: #0d1224;
+    --on-state: #1a1210;
+
+    --st-missing: #ff8a7a;
+    --st-missing-tint: #2a1a18;
+    --st-empty: #f3b95f;
+    --st-empty-tint: #2a2114;
+    --st-placeholder: #c3a6ff;
+    --st-placeholder-tint: #221b31;
+    --st-commented: #9aa0a8;
+    --st-commented-tint: #1f2227;
+    --st-ok: #6fd3a0;
+    --st-ok-tint: #15241c;
+    --st-differs: #7dd3e8;
+    --st-differs-tint: #14242a;
+
+    --shadow-panel: 0 1px 0 rgb(0 0 0 / 40%);
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: #101215;
+  --surface: #171a1f;
+  --surface-sunken: #1c2026;
+  --ink: #e8e9e6;
+  --ink-soft: #a0a6af;
+  --ink-faint: #858d97;
+  --line: #2a2e35;
+  --line-strong: #3a404a;
+  --accent: #7d93ff;
+  --accent-ink: #a9b8ff;
+  --accent-tint: #1b2140;
+  --focus: #7d93ff;
+
+  --on-accent: #0d1224;
+  --on-state: #1a1210;
+
+  --st-missing: #ff8a7a;
+  --st-missing-tint: #2a1a18;
+  --st-empty: #f3b95f;
+  --st-empty-tint: #2a2114;
+  --st-placeholder: #c3a6ff;
+  --st-placeholder-tint: #221b31;
+  --st-commented: #9aa0a8;
+  --st-commented-tint: #1f2227;
+  --st-ok: #6fd3a0;
+  --st-ok-tint: #15241c;
+  --st-differs: #7dd3e8;
+  --st-differs-tint: #14242a;
+
+  --shadow-panel: 0 1px 0 rgb(0 0 0 / 40%);
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Is my data leaving the browser?
+    url: https://github.com/SynergyFlowLabs/env-compare/blob/main/docs/PRIVACY.md
+    about: How the guarantees work and how to verify them yourself in DevTools.
