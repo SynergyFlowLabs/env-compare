@@ -58,7 +58,7 @@ Four views over one shared model: **Summary** (plain language), **Table** (row-a
 | Promise | Enforcement |
 | --- | --- |
 | No upload | Static site, no backend, no API routes; `connect-src 'none'` in the production CSP |
-| No storage | No `localStorage` / `sessionStorage` / `IndexedDB` / cookies / service worker — a CI check fails the build if these APIs appear in `src/` |
+| No storage of file content | No `localStorage` / `sessionStorage` / `IndexedDB` / cache / service worker, and no cookie ever holds a name or a value from a file — a CI check fails the build if these APIs appear in `src/`. **Amended 2026-10-20:** one functional cookie (`ec-theme`), written only after explicit consent, is permitted and confined to `src/ui/lib/consent.ts`; see §13.7 |
 | No third-party code | No analytics, no CDN fonts, no tag managers; dependency allowlist checked in CI |
 | No shareable links | No URL or hash state — file content can never leak into a link, a browser history entry, or a screenshot of the address bar |
 
@@ -193,7 +193,7 @@ These are **constitutional**. A PR that violates them is rejected regardless of 
 | ID | Non-goal | Rationale |
 | --- | --- | --- |
 | NG1 | Any server-side processing, API route, serverless function, or database | Removes the entire class of "did my secrets get logged?" risk |
-| NG2 | Any browser persistence: `localStorage`, `sessionStorage`, `IndexedDB`, cookies, cache storage, service worker, `window.name`, form-value restoration | "We store nothing" must be literally true; mechanically enforced in CI |
+| NG2 | Persistence of file content, or of anything derived from it: `localStorage`, `sessionStorage`, `IndexedDB`, cache storage, service worker, `window.name`, form-value restoration — and any cookie other than the consented theme cookie | The claim must be literally true for the data that matters, and mechanically enforced in CI. See §13.7 for the one, narrow, consented exception |
 | NG3 | Shareable links, URL/hash-encoded content, or deep links containing keys | A URL leaks into history, screenshots, Referer headers, and chat logs |
 | NG4 | Accounts, login, saved projects, cloud sync, team features | Not needed for a 5-minute task; adds a breach surface |
 | NG5 | Third-party scripts, analytics, error reporting (Sentry/etc.), tag managers, CDN-hosted fonts, embeds | Each is an exfiltration path; each requires trust we cannot ask for |
@@ -450,7 +450,7 @@ As a developer, I want to see the original text so I trust the analysis.
 
 **US-22 (P0) — Nothing persists.**
 - **Given** I reload the page, **then** both textareas are empty and no dialog restores previous content.
-- **Given** DevTools → Application, **then** Local Storage, Session Storage, IndexedDB, and Cookies are empty after a full session of use.
+- **Given** DevTools → Application, **then** Local Storage, Session Storage and IndexedDB are empty after a full session of use, and Cookies holds at most `ec-theme`, only if the reader consented to remembering the theme.
 - **Given** I navigate back to the page, **then** no file content is reconstructed from history or URL.
 
 ### 8.5 Contribution
@@ -966,7 +966,7 @@ v1 ships the dotenv superset grammar, plus a note ("this may parse differently i
 | ID | Threat | Mitigation | Residual risk |
 | --- | --- | --- | --- |
 | T1 | Secrets POSTed to our server or a third party | No server, no API routes, no functions; `connect-src 'none'`; no third-party origins in the CSP; an e2e test asserts zero requests after load | None within the app's control |
-| T2 | Silent persistence (localStorage, cookies, IndexedDB) | CI grep blocks the APIs; e2e asserts storage is empty; no service worker | Browser-level form restore — mitigated by controlled inputs and `autocomplete="off"` |
+| T2 | Silent persistence (localStorage, IndexedDB, cookies) | CI grep blocks the APIs except the audited theme-cookie module; e2e asserts storage is empty and that no cookie exists without consent; no service worker | Browser-level form restore — mitigated by controlled inputs and `autocomplete="off"` |
 | T3 | Secrets in URLs, history, or Referer headers | No content in the URL; `Referrer-Policy: no-referrer`; `no-store` on the document | A user screenshots the address bar of a link they made elsewhere |
 | T4 | Third-party scripts or fonts exfiltrate data | No third-party origins at all; system fonts; no analytics or error reporting; dependency allowlist | A compromised build-time dependency — mitigated by a lockfile, `ignore-scripts`, and diff review |
 | T5 | Supply-chain attack via a new dependency | Dependency allowlist in CI, `npm ci`, lockfile review, no postinstall scripts, two maintainer approvals for dependency PRs | Maintainer account compromise — mitigated by 2FA and branch protection |
@@ -1013,7 +1013,7 @@ Notes:
 
 `scripts/check-privacy.mjs`, run in CI and in `pre-commit`:
 
-1. Scan `src/` for forbidden identifiers: `localStorage`, `sessionStorage`, `indexedDB`, `document.cookie`, `caches`, `serviceWorker`, `sendBeacon`, `XMLHttpRequest`, `new WebSocket`, `new EventSource`, `fetch(`, `window.name`, and `history.pushState` with content.
+1. Scan `src/` for forbidden identifiers: `localStorage`, `sessionStorage`, `indexedDB`, `document.cookie` (allowed only in `src/ui/lib/consent.ts`, and only for `ec-theme` with `SameSite=Lax`, `Path=/` and `Max-Age`), `caches`, `serviceWorker`, `sendBeacon`, `XMLHttpRequest`, `new WebSocket`, `new EventSource`, `fetch(`, `window.name`, and `history.pushState` with content.
 2. Check `package.json` dependencies against an allowlist (`react`, `react-dom`, plus dev-only tooling). Any addition requires a `deps-approved` maintainer label.
 3. After the build, scan `dist/**/*.js` for external origins (`https://`, `http://`, protocol-relative `//`) not in a tiny allowlist of unavoidable literals (e.g. the `http://www.w3.org/2000/svg` namespace). Fail on anything else.
 4. Assert `dist/index.html` contains no `<script src>` other than same-origin hashed bundles.
@@ -1026,7 +1026,7 @@ The guard prints a human-readable explanation so contributors understand *why* s
 | Test | Assertion |
 | --- | --- |
 | `no-network.spec.ts` (Playwright) | Collect every request after `page.goto`; assert all are same-origin static assets, and that zero requests contain any input token |
-| `no-storage.spec.ts` | After a full session: `localStorage.length === 0`, `sessionStorage.length === 0`, `indexedDB.databases()` empty, `document.cookie === ''` |
+| `no-storage.spec.ts` | After a full session: `localStorage.length === 0`, `sessionStorage.length === 0`, `indexedDB.databases()` empty, `document.cookie === ''` — and, after consenting to the theme cookie, exactly one cookie named `ec-theme` |
 | `storage-hostile.spec.ts` | Override `Storage.prototype.setItem` to throw; the app must still work end to end |
 | `csp-violation.spec.ts` | Attempt a `fetch`; assert it is blocked and the app does not report success |
 | `reload-empty.spec.ts` | Fill both files, reload, assert both textareas are empty and no restore dialog appears |
@@ -1051,6 +1051,26 @@ Honesty here increases trust; overclaiming destroys it.
 - The report defaults to keys-only regardless of masking.
 
 ---
+
+### 13.7 Amendment (2026-10-20): the consented theme cookie
+
+The original text forbids cookies outright. The product owner has since asked for the theme
+preference to survive a reload. Rather than let the guarantee erode quietly, the exception is
+defined here and enforced in `scripts/check-privacy.mjs`:
+
+- **One cookie.** Name `ec-theme`; value is `light` or `dark`; one year; `SameSite=Lax`; `Path=/`.
+- **One file.** `src/ui/lib/consent.ts` is the only source file that may mention `document.cookie`.
+  The guard fails the build if another file does, if an assignment is missing an attribute, or if
+  an assignment is not named by the `THEME_COOKIE` constant.
+- **Consent first.** Nothing is written until the reader answers the question, which is asked when
+  they first choose Light or Dark — never on page load. Declining keeps the choice for the session
+  and is remembered as a refusal, so the question is not repeated during that visit. `Auto` writes
+  nothing.
+- **Revocable.** `/privacy` shows whether a value is stored and can delete it in one click.
+- **No file content.** The module imports nothing from `src/core`, so it has no access to a parsed
+  file; tests assert both that import rule and the value domain.
+- **Everything else is unchanged.** No localStorage, no IndexedDB, no service worker, no third-party
+  cookie, no analytics. `connect-src 'none'` remains.
 
 ## 14. Technical architecture
 

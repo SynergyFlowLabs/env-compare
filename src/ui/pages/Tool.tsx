@@ -19,7 +19,7 @@ import { compare, type Bucket, type Comparison, type FileInput } from '../../cor
 import { parseEnvFile } from '../../core/parse';
 import { buildFixBlock } from '../../core/export';
 import { countLines } from '../../core/parse';
-import { reducer, initialState, type Tab } from '../../state/reducer';
+import { reducer, initialState, type ExportKind, type Tab } from '../../state/reducer';
 import { copyText, downloadText, safeFileName } from '../lib/clipboard';
 import { cn } from '../lib/utils';
 import { FilePane } from '../components/FilePane';
@@ -32,7 +32,7 @@ import { FixPanel } from '../components/FixPanel';
 import { Diagnostics } from '../components/Diagnostics';
 import { Toast } from '../components/Toast';
 import { Dialog } from '../components/Dialog';
-import { AgentPromptDialog } from '../components/AgentPromptDialog';
+import { ExportDialog } from '../components/ExportDialog';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -140,30 +140,34 @@ export function Tool() {
   );
 
   /**
-   * One click, two things: the prompt goes to the clipboard and the dialog
-   * opens. The copy is attempted first so the dialog can state what happened —
+   * One click, two things: the export goes to the clipboard and a dialog shows
+   * it. The copy is attempted first so the dialog can state what happened —
    * claiming "copied" when the browser refused is worse than saying nothing.
    */
-  const openPrompt = useCallback(
-    async (text: string) => {
+  const copyAndShow = useCallback(
+    async (kind: ExportKind, text: string, done: string) => {
       const copied = await copyText(text);
-      dispatch({ type: 'promptOpen', text, copied });
-      if (copied) dispatch({ type: 'toast', message: 'Prompt copied for your agent' });
+      dispatch({ type: 'previewOpen', kind, text, copied });
+      if (copied) dispatch({ type: 'toast', message: done });
     },
     [dispatch],
   );
 
   /** Copy from inside the dialog: same feedback, no second dialog on top. */
-  const copyFromPromptDialog = useCallback(async () => {
-    const text = state.agentPrompt?.text;
-    if (!text) return;
-    const copied = await copyText(text);
-    dispatch({ type: 'promptCopied', copied });
+  const copyFromDialog = useCallback(async () => {
+    const preview = state.preview;
+    if (!preview) return;
+    const copied = await copyText(preview.text);
+    dispatch({ type: 'previewCopied', copied });
     dispatch({
       type: 'toast',
-      message: copied ? 'Prompt copied for your agent' : 'Clipboard blocked — select the text instead',
+      message: copied
+        ? preview.kind === 'prompt'
+          ? 'Prompt copied for your agent'
+          : 'Report copied'
+        : 'Clipboard blocked — select the text instead',
     });
-  }, [dispatch, state.agentPrompt]);
+  }, [dispatch, state.preview]);
 
   const texts = useMemo(() => new Map(state.files.map((f) => [f.id, f.text])), [state.files]);
 
@@ -435,7 +439,7 @@ export function Tool() {
                   targetName={targetFile.name}
                   targetText={targetFile.text}
                   onCopy={(text, label) => void copy(text, label)}
-                  onPrompt={(text) => void openPrompt(text)}
+                  onExport={(kind, text, done) => void copyAndShow(kind, text, done)}
                   onDownload={(filename, text) => {
                     downloadText(safeFileName(filename), text);
                     dispatch({ type: 'toast', message: `Downloaded ${filename}` });
@@ -475,12 +479,13 @@ export function Tool() {
         </Dialog>
       ) : null}
 
-      {state.agentPrompt ? (
-        <AgentPromptDialog
-          text={state.agentPrompt.text}
-          copied={state.agentPrompt.copied}
-          onCopy={() => void copyFromPromptDialog()}
-          onClose={() => dispatch({ type: 'promptClose' })}
+      {state.preview ? (
+        <ExportDialog
+          kind={state.preview.kind}
+          text={state.preview.text}
+          copied={state.preview.copied}
+          onCopy={() => void copyFromDialog()}
+          onClose={() => dispatch({ type: 'previewClose' })}
         />
       ) : null}
 
@@ -639,7 +644,7 @@ function CopyFallback({
 function Footer() {
   return (
     <footer className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border py-4 text-[12px] text-faint">
-      <span>EnvCompare never stores anything. No accounts, no cookies, no analytics.</span>
+      <span>Your files are never stored. No accounts, no analytics — one optional theme cookie.</span>
       <a className="text-muted-foreground underline underline-offset-2 hover:text-foreground" href="/privacy">
         How this works
       </a>

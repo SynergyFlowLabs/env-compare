@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Bot, Copy, Download, Share2 } from 'lucide-react';
 import type { Comparison } from '../../core/compare';
 import { buildAgentPrompt, buildFixBlock, buildReport, type Redaction } from '../../core/export';
+import type { ExportKind } from '../../state/reducer';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Label } from './ui/label';
@@ -13,11 +14,11 @@ export interface FixPanelProps {
   targetText: string;
   onCopy: (text: string, label: string) => void;
   /**
-   * Copies the prompt and opens the dialog that shows it. Kept separate from
-   * `onCopy` because this action has a second half — the reader must be able to
-   * read what the agent is about to be given.
+   * Copies an export and opens the dialog that shows it. Kept separate from
+   * `onCopy` because these actions have a second half — the reader must be able
+   * to read what they are about to hand to an agent, or paste into a PR.
    */
-  onPrompt: (text: string) => void;
+  onExport: (kind: ExportKind, text: string, done: string) => void;
   onDownload: (filename: string, text: string) => void;
 }
 
@@ -36,7 +37,7 @@ export function FixPanel({
   targetName,
   targetText,
   onCopy,
-  onPrompt,
+  onExport,
   onDownload,
 }: FixPanelProps) {
   const [redaction, setRedaction] = useState<Redaction>('keys');
@@ -122,14 +123,18 @@ export function FixPanel({
             </p>
           )}
           <div className="mt-3 flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={() => onCopy(report, 'Report copied')}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onExport('report', report, 'Report copied')}
+            >
               <Share2 aria-hidden="true" />
               Copy report
             </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={() => onPrompt(prompt)}
+              onClick={() => onExport('prompt', prompt, 'Prompt copied for your agent')}
               disabled={prompt === ''}
             >
               <Bot aria-hidden="true" />

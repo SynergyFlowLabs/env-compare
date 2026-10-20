@@ -27,7 +27,7 @@ Run `npm test` and `npm run privacy` before every commit. Both are required in C
 These are enforced by `scripts/check-privacy.mjs` and by tests. A PR that breaks one is rejected regardless of quality.
 
 1. **No network.** No `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, `sendBeacon`, or any third-party origin. The production CSP is `connect-src 'none'`.
-2. **No storage.** No `localStorage`, `sessionStorage`, `indexedDB`, `document.cookie`, `caches`, or service worker. Not even for a theme preference.
+2. **No storage of anything the reader pasted.** No `localStorage`, `sessionStorage`, `indexedDB`, `caches`, or service worker. `document.cookie` is allowed in exactly one file, `src/ui/lib/consent.ts`, for exactly one cookie (`ec-theme`, value `light`/`dark`, `SameSite=Lax`, `Path=/`, `Max-Age`), written only after consent. Anything else fails `npm run privacy`.
 3. **No URL state.** File names or content must never enter the URL, the hash, or history.
 4. **No runtime dependencies beyond `react` and `react-dom`.** Ask before adding one (label `deps-approved`).
 5. **No telemetry of any kind**, including error reporting services.
@@ -78,7 +78,7 @@ e2e/            Playwright: privacy suites that run in CI, not locally by defaul
 
 ```bash
 npm run typecheck     # tsc, project-wide
-npm test              # 331 unit + component tests
+npm test              # 347 unit + component tests
 npm run build         # typecheck + production build
 npm run privacy       # storage/network/dependency guard
 npm run check         # all of the above, in the order CI runs them

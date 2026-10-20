@@ -19,7 +19,7 @@ Before opening a PR, run `npm run check`: tests, build and the privacy guard.
 
 The product is only useful because people paste **real secrets** into it. These rules are enforced by `scripts/check-privacy.mjs` and by CI:
 
-1. No storage APIs: `localStorage`, `sessionStorage`, `indexedDB`, cookies, cache storage, service workers. Not even for a theme preference.
+1. No storage APIs: `localStorage`, `sessionStorage`, `indexedDB`, cache storage, service workers — not even for a preference. **One exception exists and is not a precedent:** `document.cookie`, confined to `src/ui/lib/consent.ts`, holding only the theme, only after the reader consents. The guard enforces the file, the cookie name and its `SameSite`/`Path`/`Max-Age` attributes; another cookie, another file, or another purpose fails the build.
 2. No network APIs: `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, `sendBeacon`, `history.pushState`.
 3. No new runtime dependency without review. The allowlist lives in `scripts/check-privacy.mjs` with a reason and a license per entry, and the guard fails the build on anything else, on a changed license, or on an install script. Adding an entry is a deliberate act: say what it does in the PR.
 4. No file content in a URL, a hash, or a share link.

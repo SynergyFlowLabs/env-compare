@@ -11,6 +11,9 @@ import { SAMPLE_EXAMPLE, SAMPLE_TARGET } from './sample';
 
 export type Tab = 'summary' | 'table' | 'raw' | 'fix';
 
+/** Exports that are copied and simultaneously shown in a dialog. */
+export type ExportKind = 'prompt' | 'report';
+
 export interface EnvFileState {
   id: string;
   name: string;
@@ -55,13 +58,14 @@ export interface AppState {
   /** Show the manual-copy dialog when the Clipboard API is unavailable. */
   copyFallback: { text: string; label: string } | null;
   /**
-   * The agent prompt, shown in a dialog the moment it is requested.
+   * An export (the agent prompt, or the report) that was copied and is now on
+   * screen, so the reader can see what they are about to paste somewhere else.
    *
-   * `copied` is part of the state rather than local to the dialog so the dialog
-   * can tell the truth after an automatic copy that the browser refused: the
-   * text is still on screen, but the button says so instead of pretending.
+   * `copied` is part of the state rather than local to the dialog so it can
+   * tell the truth after an automatic copy the browser refused: the text is
+   * still on screen, but the status line must not claim success.
    */
-  agentPrompt: { text: string; copied: boolean } | null;
+  preview: { kind: ExportKind; text: string; copied: boolean } | null;
 }
 
 export type Action =
@@ -84,9 +88,9 @@ export type Action =
   | { type: 'dismissToast' }
   | { type: 'confirmClear'; open: boolean }
   | { type: 'copyFallback'; value: AppState['copyFallback'] }
-  | { type: 'promptOpen'; text: string; copied: boolean }
-  | { type: 'promptCopied'; copied: boolean }
-  | { type: 'promptClose' };
+  | { type: 'previewOpen'; kind: ExportKind; text: string; copied: boolean }
+  | { type: 'previewCopied'; copied: boolean }
+  | { type: 'previewClose' };
 
 let nextToastId = 1;
 
@@ -107,7 +111,7 @@ export const initialState: AppState = {
   toast: null,
   confirmClear: false,
   copyFallback: null,
-  agentPrompt: null,
+  preview: null,
   autoAdvance: true,
 };
 
@@ -235,16 +239,19 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'copyFallback':
       return { ...state, copyFallback: action.value };
 
-    case 'promptOpen':
-      return { ...state, agentPrompt: { text: action.text, copied: action.copied } };
+    case 'previewOpen':
+      return {
+        ...state,
+        preview: { kind: action.kind, text: action.text, copied: action.copied },
+      };
 
-    case 'promptCopied':
-      return state.agentPrompt
-        ? { ...state, agentPrompt: { ...state.agentPrompt, copied: action.copied } }
+    case 'previewCopied':
+      return state.preview
+        ? { ...state, preview: { ...state.preview, copied: action.copied } }
         : state;
 
-    case 'promptClose':
-      return { ...state, agentPrompt: null };
+    case 'previewClose':
+      return { ...state, preview: null };
   }
 }
 

@@ -13,7 +13,7 @@ The comparison table is the product. Everything else gets out of its way.
 1. **No third-party assets.** No web fonts, no icon CDN (PRD NG5, CSP `font-src 'self'`). The type is whatever the OS ships. Character has to come from spacing, scale and colour, not from a download.
 2. **States must survive greyscale.** Six states means colour alone can never carry meaning: every state is icon + text + tint.
 3. **Density over airiness** in results, airiness in input. The first screen has two boxes and one instruction; the second screen is a work surface.
-4. **No dark patterns.** No "upgrade", no banners, no cookie bar, no modal on load.
+4. **No dark patterns.** No "upgrade", no banners, no cookie bar, no modal on load. The one consent question this product asks appears when the reader changes the theme — at the action, not before it — and "Not now" is as easy to reach as "Remember it".
 
 ## Palette
 
@@ -81,7 +81,7 @@ The practical rules that follow:
 
 Three explicit choices in the header — **Auto** (follow the OS, the default), **Light**, **Dark** — as segmented buttons with `aria-pressed`. Not a two-state toggle, because "follow my OS" is a real preference that a toggle silently discards.
 
-The choice lives in memory for the life of the tab and is never written to storage or the URL; reloading returns to Auto. That is not an oversight, it is the same rule that keeps file contents out of storage.
+The choice is applied immediately. Remembering it is a separate, consented act: the first time someone picks Light or Dark, a dialog offers to store one cookie (`ec-theme`) and explains exactly what it contains. Declining keeps the choice for the session and is remembered as a refusal, so the question is never repeated in that visit. `Auto` writes nothing. `/privacy` states the current status and can forget it.
 
 Mechanically the choice is one attribute, `data-theme` on `<html>`:
 

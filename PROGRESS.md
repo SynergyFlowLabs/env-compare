@@ -218,6 +218,39 @@ see what they are about to hand an agent.
 **331 tests.** Four new: copies-and-shows in one click, copies again from inside the dialog, reports a
 blocked clipboard instead of success, and closes cleanly.
 
+### 2026-10-20 — Report export, and the theme cookie (consented)
+
+**The report now behaves like the prompt.** "Copy report" copies *and* opens a dialog showing the
+report that was copied, with its own **Copy report again** button and a toast either way. The two
+exports share one `ExportDialog` and one reducer slice (`preview: { kind: 'prompt' | 'report' }`) —
+the earlier prompt-only dialog was the special case, and this is the general one.
+
+**Theme memory, with consent.** This reverses a stated invariant, so it is worth being precise about
+what changed and what did not.
+
+- Asking: the question appears the first time the reader picks Light or Dark, never on page load. The
+  dialog names the cookie, shows its value and lifetime, and puts "Not now" beside "Remember it".
+  Declining keeps the choice for the session, and the refusal is remembered so it is not repeated.
+  "Auto" writes nothing at all.
+- Storing: one cookie, `ec-theme`, value `light` or `dark`, one year, `SameSite=Lax`, `Path=/`.
+- Confining: `src/ui/lib/consent.ts` is the only file that may touch `document.cookie`. The guard now
+  checks the module exists, that every assignment carries the three attributes, that every assignment
+  is named by the `THEME_COOKIE` constant, and that no other source file mentions a cookie. A second
+  unit test asserts the same rules and that the module imports nothing from `src/core`, so it cannot
+  see anything the reader pasted.
+- Revoking: `/privacy` states whether a value is stored and offers **Forget my theme**, which deletes
+  it and returns the interface to Auto.
+- Claiming: the README, `/privacy`, `docs/PRIVACY.md`, `CONTRIBUTING`, `AGENTS.md` and `PRD §13` now
+  say "your files are never stored" and "one cookie, only if you ask" instead of "no cookies". PRD
+  §13.7 records the amendment rather than editing history.
+
+The interesting failure in this step was in the guard itself: the first version checked attributes
+with `source.includes('SameSite=Lax')`, and the module's own comment explaining `SameSite=Lax`
+satisfied it. It now parses only the `document.cookie = ...` assignments, and there is a manual
+negative test in the log below.
+
+**347 tests**, typecheck, build and guard green.
+
 ---
 
 ## Decisions made during implementation
@@ -242,6 +275,9 @@ blocked clipboard instead of success, and closes cleanly.
 | 2026-10-20 | Tokens stay the only colour source; shadcn's semantic names are mapped onto them | Otherwise two palettes drift and the contrast test stops covering what ships |
 | 2026-10-20 | shadcn components are vendored, not installed as a design-system package | They are source here; upgrading is a deliberate diff, not a lockfile change |
 | 2026-10-20 | Line icons replace the typographic state glyphs | The glyphs depended on the reader's font and drifted in weight; the icon+word rule they served is unchanged |
+| 2026-10-20 | One `ExportDialog` for prompt and report, keyed by `kind` | Two exports with the same interaction should not drift; the prompt version was the special case |
+| 2026-10-20 | A consented theme cookie replaces "no cookies at all" | The claim that survived is the one that matters — no file content is stored — and the exception is one file, one name, one value domain, enforced by the guard |
+| 2026-10-20 | Consent is asked at the action, not on load | A banner on load is the pattern the design brief rules out; a question at the moment of the action can explain itself and "no" costs nothing |
 | 2026-10-20 | The agent prompt opens a dialog as well as copying | The prompt is the one export that leaves the tab (pasted into an agent); the reader should see it, and a blocked clipboard needs somewhere to fall back to |
 | 2026-10-20 | Auto-advance is a state flag, not a derived condition | "Both files have keys" is not the same as "the reader wants the results"; conflating them made the editor unusable |
 | 2026-10-20 | The six comparison states keep their own Tailwind names | `destructive` cannot express "commented out", and collapsing states into one red loses the information the product exists to show |

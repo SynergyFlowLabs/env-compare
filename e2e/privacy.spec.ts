@@ -25,7 +25,7 @@ test('no request is made after the page loads', async ({ page }) => {
   expect(requests).toEqual([]);
 });
 
-test('nothing is written to storage', async ({ page }) => {
+test('nothing is written to storage, and no cookie without consent', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'See an example' }).click();
 
@@ -37,6 +37,41 @@ test('nothing is written to storage', async ({ page }) => {
   }));
 
   expect(storage).toEqual({ local: 0, session: 0, cookie: '', databases: 0 });
+});
+
+test('the theme cookie appears only after the reader agrees', async ({ page, context }) => {
+  await page.goto('/');
+
+  await page.getByRole('button', { name: 'Dark' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('Remember your theme?');
+  expect((await context.cookies()).length).toBe(0);
+
+  await dialog.getByRole('button', { name: 'Not now' }).click();
+  expect((await context.cookies()).length).toBe(0);
+
+  await page.getByRole('button', { name: 'Light' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect((await context.cookies()).length).toBe(0);
+
+  await page.getByRole('button', { name: 'Auto' }).click();
+  await page.getByRole('button', { name: 'Dark' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Remember it' }).click();
+
+  const cookies = await context.cookies();
+  expect(cookies).toHaveLength(1);
+  expect(cookies[0]).toMatchObject({ name: 'ec-theme', value: 'dark', httpOnly: false, sameSite: 'Lax' });
+});
+
+test('a remembered theme survives a reload', async ({ page, context }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Light' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Remember it' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  expect((await context.cookies()).map((c) => c.name)).toEqual(['ec-theme']);
 });
 
 test('a reload starts empty', async ({ page }) => {

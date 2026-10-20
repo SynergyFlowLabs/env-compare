@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
 import { SkipLink } from '../components/SkipLink';
 import { PROSE } from '../lib/prose';
+import { ThemeMemory } from '../components/ThemeMemory';
 
 const SOURCE = 'https://github.com/SynergyFlowLabs/env-compare';
 
@@ -18,12 +19,14 @@ const PROMISES: Array<{ title: string; body: ReactNode }> = [
     ),
   },
   {
-    title: 'Nothing is stored.',
+    title: 'Your files are never stored.',
     body: (
       <>
         No <code>localStorage</code>, no <code>sessionStorage</code>, no <code>IndexedDB</code>, no
-        cookies, no service worker. A check in CI fails the build if any of those appear in the
-        source. Even your theme choice lives in memory only, so it resets when you reload.
+        service worker, and no cookie ever holds anything you paste. A check in CI fails the build if
+        any other part of the source touches those APIs. The one cookie this site can set holds a
+        single word — your theme — and only if you ask for it. See{' '}
+        <a href="#theme-memory">Theme memory</a> below.
       </>
     ),
   },
@@ -76,6 +79,14 @@ export function Privacy() {
             ))}
           </ul>
 
+          <h2 id="theme-memory">Theme memory</h2>
+          <p>
+            The theme control asks once, the first time you choose Light or Dark, whether it may
+            remember your choice in a cookie. It never asks on page load, and saying no costs you
+            nothing: the theme still applies, it simply lasts until you reload.
+          </p>
+          <ThemeMemory />
+
           <h2>Verify it yourself</h2>
           <ol>
             <li>Open your browser&apos;s developer tools and switch to the Network tab.</li>
@@ -85,8 +96,9 @@ export function Privacy() {
               before you pasted anything.
             </li>
             <li>
-              Switch to Application → Storage. Local Storage, Session Storage, IndexedDB and
-              Cookies are all empty.
+              Switch to Application → Storage. Local Storage, Session Storage and IndexedDB are
+              empty. Under Cookies there is at most one entry, <code className="mono">ec-theme</code>,
+              and only if you said yes to remembering it.
             </li>
           </ol>
 
