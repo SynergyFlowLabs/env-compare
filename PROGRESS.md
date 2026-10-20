@@ -284,6 +284,23 @@ two.
 
 ---
 
+### 2026-10-20 — v1.0 merged and deployed
+
+- **PR #1** (`EnvCompare v1.0`) opened and merged into `main` — merge commit `1c2c043`.
+- **CI did not run.** Every job on the PR failed before starting with *"The job was not started
+  because your account is locked due to a billing issue"* — GitHub Actions is unavailable on this
+  account, not a code failure. The local gate was green before merging: `tsc`, **365 tests / 18
+  files**, `npm run build`, `npm run privacy`. Re-enabling Actions is the one outstanding thing
+  before CI can be trusted again.
+- **Deployed** from `main` to Vercel project `env-compare`
+  (`prj_ylnx7GoCcafV35nDvjqrZJXvS6cV`), deployment `dpl_2GywpZ47vF7CVWfoyvoyKtCPhvQv`, state READY,
+  promoted to production: <https://env-compare-six.vercel.app>. Build log shows the same Vite
+  output as locally (2042 modules, `dist/index.html` + hashed assets); `/` and `/privacy` both serve
+  the app through the `vercel.json` rewrites.
+- **The repo is not linked to the Vercel project yet**, and `gitProviderOptions.createDeployments`
+  is `disabled`, so pushes to `main` will not deploy on their own. Either connect the repository in
+  the Vercel dashboard or keep creating deployments through the API.
+
 ## Decisions made during implementation
 
 | Date | Decision | Why |
