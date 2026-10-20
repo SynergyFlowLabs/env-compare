@@ -1,0 +1,53 @@
+name: Parser edge case
+description: An env file that is parsed or compared incorrectly.
+labels: [parser, bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not paste a real secret.** Replace every value with something obviously fake,
+        such as `example-value-1` or `sk_test_xxxxxxxxxxxx`.
+
+  - type: textarea
+    id: input
+    attributes:
+      label: The exact file contents
+      description: The smallest input that reproduces the problem.
+      render: shell
+      placeholder: |
+        OPENAI_API_KEY=changeme
+        # SENTRY_DSN=
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      placeholder: SENTRY_DSN should be reported as "commented out", not "missing".
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+    validations:
+      required: true
+
+  - type: input
+    id: reference
+    attributes:
+      label: Which dotenv behaviour should this match?
+      description: If `dotenv.parse()` disagrees with us, say so — that is a bug by definition.
+      placeholder: dotenv 18, or "not sure"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: These contents contain no real credentials.
+          required: true

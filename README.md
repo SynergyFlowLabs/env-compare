@@ -1,81 +1,133 @@
 # EnvCompare
 
-**See what your `.env` is missing — without your secrets leaving your browser.**
+**See what your `.env` is missing — without your secrets leaving the browser.**
 
-Paste your `.env.example` and your `.env`. EnvCompare shows every variable that is missing, empty, still a placeholder, or leftover — side by side, in plain language — and hands you the exact block to paste back into your file.
+Paste `.env.example` and `.env`. EnvCompare shows every variable that is missing, empty, still a placeholder, or leftover, and hands you the exact block to paste back into your file.
 
 No upload. No account. No storage. No analytics.
 
-> **Status: PRD / specification stage.** This repository currently contains the product specification, not an implementation. The build starts at [PRD §17](docs/PRD.md#17-delivery-plan). If you want to help shape the API, the parser, or the UI before code exists — that is exactly the right moment.
+```
+.env.example                   .env
+─────────────────────────────   ─────────────────────────────
+DATABASE_URL      postgres… ✓   DATABASE_URL      postgres… ✓
+OPENAI_API_KEY    sk-…      ✓   OPENAI_API_KEY              ⊘
+STRIPE_SECRET_KEY changeme  ✎   STRIPE_SECRET_KEY changeme  ✎
+RESEND_API_KEY    re_…      ✓   RESEND_API_KEY    re_OLD…   ≠
+# SENTRY_DSN                ⫽   SENTRY_DSN                  ⊘
 
----
+⊘ missing   ✎ placeholder   ⫽ commented out   ✓ set   ≠ set differently
+```
 
 ## The problem
 
 AI code editors and agents are deliberately designed **not** to touch `.env` files. So they write a `.env.example` instead, and you fill in the real file by hand.
 
-Then the project grows. The agent adds keys to `.env.example`; your `.env` quietly drifts behind it. Nothing warns you. The app just breaks later with a `401`, a blank page, or a database error — and the cause is one line that is missing from a file you were told not to worry about.
+Then the project grows. The agent adds keys to `.env.example`; your `.env` quietly drifts behind it. Nothing warns you. The app breaks later with a `401`, a blank page, or a database error, and the cause is one line missing from a file you were told not to worry about.
 
-A `diff` does not help. It shows lines, not variables, and it says nothing about the two failures that hurt most:
+A `diff` does not help. It compares lines, not variables, and it says nothing about the two failures that hurt most:
 
 ```bash
-OPENAI_API_KEY=          # defined, but empty  → fails at runtime
-OPENAI_API_KEY=changeme  # still the example  → fails at runtime
+OPENAI_API_KEY=          # defined, but empty       → fails at runtime
+OPENAI_API_KEY=changeme  # still the example value → fails at runtime
 ```
 
-Both pass a naive "does the key exist?" check.
+Both pass a naive "does this key exist?" check.
 
-## What EnvCompare does
+## What it does
 
-- **Compare** any two (or more) env files against a reference — usually `.env.example`.
-- **Classify** every variable per file: missing · empty · placeholder · commented out · set · set differently.
-- **Show it four ways:** a plain-language summary, a row-aligned colour-coded table, the raw text, and a copy-ready fix.
-- **Give you the fix**, not just the diagnosis: `Copy 3 variables for .env`.
-- **Stay safe to use with real secrets:** values can be masked in one click, the shareable report contains key names only, and the app has no way to send your data anywhere.
+- **Compares** your files against a reference, usually `.env.example`.
+- **Classifies** every variable in every file: missing · empty · placeholder · commented out · set · set differently.
+- **Shows four views:** a plain-language summary, a row-aligned table with inline editing, the annotated raw text, and a copy-ready fix.
+- **Gives you the fix**, not just the diagnosis: `Copy 3 variables for .env`.
+- **Stays safe with real secrets:** mask values in one click; reports contain key names only.
 
-## Why you can trust the privacy claim
+Everything happens in a single tab. Close it and the data is gone, because it was never written anywhere.
 
-The promise is not a paragraph in a policy. It is enforced and testable:
+## Quick start
 
-| Promise | How it is enforced |
+```bash
+git clone https://github.com/SynergyFlowLabs/env-compare.git
+cd env-compare
+npm install
+npm run dev            # http://localhost:5173
+```
+
+Requires Node 22.
+
+| Command | What it does |
 | --- | --- |
-| Nothing is uploaded | Static site, no backend or API routes; `connect-src 'none'` in the production CSP |
-| Nothing is stored | No `localStorage`, `sessionStorage`, `IndexedDB`, cookies, or service worker — a CI check fails the build if those APIs appear in `src/` |
-| No third-party code | No analytics, no CDN fonts, no tag managers, and a runtime dependency allowlist (React only) |
-| No shareable links | No URL or hash state, so file content can never end up in a link, a history entry, or a screenshot of the address bar |
+| `npm run dev` | Vite dev server |
+| `npm test` | Unit and component tests (vitest + Testing Library) |
+| `npm run build` | Typecheck, then production build to `dist/` |
+| `npm run preview` | Serve the production build |
+| `npm run privacy` | The privacy guard (see below) |
+| `npm run test:e2e` | Playwright suite; needs `npx playwright install` first |
+| `npm run check` | Tests, build and guard — what CI runs |
 
-You can verify it yourself in about 30 seconds: open DevTools → Network, use the tool, and watch zero requests go out. Then check Application → Storage: still empty.
+## How the guarantees are enforced
 
-Full framework — threat model, enforcement mechanisms, and what we *cannot* protect you from — is in [PRD §13](docs/PRD.md#13-privacy-and-security-architecture).
+The privacy promise is not a paragraph in a policy. Each claim has a mechanism, and each mechanism has a test:
 
-## Design principles
+| Promise | Mechanism |
+| --- | --- |
+| Nothing is uploaded | Static site, no backend. Production CSP sets `connect-src 'none'`. |
+| Nothing is stored | No `localStorage`, `sessionStorage`, `IndexedDB`, cookies, cache or service worker. `npm run privacy` fails the build if any appears in `src/`. |
+| No third-party code | Runtime dependencies are exactly `react` and `react-dom`; CI asserts it. No fonts CDN, no analytics, no tag manager. |
+| No shareable links | No URL or hash state, so file content can never reach a link, a history entry, or a screenshot of the address bar. |
+| Masking is real | Masked values are removed from the DOM, not hidden with CSS. |
+| Exports are safe | Fix blocks, agent prompts and default reports contain key names only. |
 
-1. **Ship the fix, not the diagnosis.** If the user has to retype a key name, the tool failed.
-2. **Accuracy over coverage.** A false "you're missing something" destroys trust. Speculative findings are hints, never errors.
-3. **Plain language.** "Missing from your `.env`", not "set difference". A non-coder must succeed without help.
-4. **Trust is binary.** One analytics script would make the whole product unusable for its main use case.
-5. **You are one paste away from done.** No onboarding, no setup, no account, no signup wall.
+Verify it yourself in about thirty seconds: open DevTools → Network, use the tool, and watch nothing go out. Then check Application → Storage: still empty.
+
+The reasoning, the threat model, and the things we explicitly cannot protect you from (extensions, your clipboard, your screen) are in [docs/PRIVACY.md](docs/PRIVACY.md).
+
+## How it decides
+
+Correctness is the whole product. A false "you're missing something" teaches people to ignore the tool.
+
+- **Parsing matches `dotenv`.** Quotes, `export` prefixes, `#` comments, duplicate keys, multi-line values, CRLF and BOM are parsed the way `dotenv.parse()` parses them, and a conformance test asserts it against every fixture. Where we deliberately differ, we say so in [PRD §12](docs/PRD.md#12-parsing-and-comparison-specification-normative).
+- **Six states, one per cell.** Missing, empty, placeholder, commented out, set, set differently. The reference file's own state matters: a key that is commented out in `.env.example` is reported differently from one that was deleted.
+- **Only high-confidence placeholders count.** `changeme`, `your-api-key`, `<your-key>`, `sk_test_xxxxxxxxxxxx` do. `test`, `dummy`, `localhost`, `example` and `password` do not: they appear in real values too often. A real JWT is never a placeholder.
+- **The fix is a surgical patch.** Edits splice the original text, so comments, ordering and quoting survive untouched. Nothing is reformatted.
+
+## Accessibility
+
+Keyboard path for every action, visible focus, labels on every input, colour never the only signal (each state has a glyph and a word), and dialogs that trap and restore focus. If you find a case that fails, it is a bug; please report it.
+
+## Contributing
+
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+
+- The most valuable contribution is a **parser edge case** with a minimal, fake-value reproduction. It becomes a permanent fixture.
+- The [PRD's non-goals](docs/PRD.md) are constitutional: PRs that add analytics, storage, accounts, or a backend will be declined regardless of quality.
+- **Never paste real secrets into an issue.** Use obvious placeholders.
+
+Good first issues are labelled [`good first issue`](https://github.com/SynergyFlowLabs/env-compare/labels/good%20first%20issue).
+
+## Repository layout
+
+```
+src/core/       parsing, comparison, patches, exporters — pure TypeScript, no DOM
+src/state/      one reducer, no persistence
+src/ui/         React components
+src/styles/     design tokens and one stylesheet
+docs/PRD.md     the specification, written before the code
+docs/DESIGN.md  palette, type, layout, motion, copy
+docs/PRIVACY.md the long version of the privacy claim
+e2e/            Playwright: no-network, no-storage, masked-DOM, hostile-storage
+tests/          281 unit and component tests, 32 parser fixtures
+AGENTS.md       conventions for humans and AI agents
+PROGRESS.md     build log and decisions
+```
 
 ## Roadmap
 
 | Version | Scope |
 | --- | --- |
-| **v1.0 (MVP)** | Two files · reference auto-detection · six-state classification · summary, table, raw, fix views · inline editing · add/remove/uncomment · masking · redacted report · copy/download · privacy guards |
-| **v1.1** | N-file matrix (3+) · framework presets (Next.js, Vite, Docker Compose, Python) · AI handoff prompt · `# required` annotations |
-| **v2 (if demanded)** | Shared core as a CLI · GitHub Action for `.env.example` drift |
-
-The full cut line, acceptance criteria, and non-goals are in the [PRD](docs/PRD.md).
-
-## Contributing
-
-Contributions are welcome — and unusually well-specified, because the spec came first.
-
-- **[docs/PRD.md](docs/PRD.md)** is the source of truth: functional requirements ([§11](docs/PRD.md#11-functional-requirements)), normative parsing rules ([§12](docs/PRD.md#12-parsing-and-comparison-specification-normative)), and the testing strategy ([§16](docs/PRD.md#16-testing-and-qa-strategy)).
-- Parsing bugs are the most valuable contribution. The parser has a **60+ fixture conformance suite**; a bug report with a minimal fake reproduction becomes a permanent test.
-- The [PRD's non-goals](docs/PRD.md#43-non-goals-hard-constraints) are constitutional. PRs that add analytics, storage, accounts, or a backend will be declined regardless of quality — that is the product, not a preference.
-
-**Never paste real secrets into a GitHub issue.** Use obviously fake values in every reproduction.
+| **v1.0** ✅ | Reference auto-detection · six-state classification · summary, table, raw and fix views · inline editing · add/remove/uncomment with undo · masking · redacted report · copy/download · privacy guard |
+| **v1.1** | N-file matrix (3+) · framework presets · richer `# required` annotations |
+| **v2 (if demanded)** | Shared core as a CLI · a GitHub Action for `.env.example` drift |
 
 ## License
 
-To be finalised with the first commit of code (MIT recommended) — see [PRD §19](docs/PRD.md#19-open-questions--decisions-needed).
+MIT — see [LICENSE](LICENSE). The parser is modelled on [dotenv](https://github.com/motdotla/dotenv) (BSD-2-Clause); attribution is in the license file.

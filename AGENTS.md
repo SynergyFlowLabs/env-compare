@@ -44,6 +44,7 @@ src/core/       pure TypeScript, no DOM, no React — 100% unit-testable, shared
 src/state/      one reducer, derived selectors, no persistence
 src/ui/         React components, pages, design tokens (src/styles/tokens.css)
 tests/          unit/, component/, fixtures/env/ (parser corpus)
+e2e/            Playwright: privacy suites that run in CI, not locally by default
 ```
 
 **Keep `src/core` framework-free.** It is the part with the highest correctness bar and the easiest thing for a contributor to work on.
@@ -56,6 +57,8 @@ tests/          unit/, component/, fixtures/env/ (parser corpus)
 - Prefer editing functions that take text + return text (surgical patches). Never regenerate a whole file from a model: comments, ordering, and quoting belong to the user.
 - Accessibility is a merge requirement: roles/labels first, `data-testid` never as the only query.
 - Colour is never the only signal for a state — always icon + text.
+- Anything that would store, transmit, or put file content in a URL is out of bounds. `npm run privacy` enforces it; do not add it to the allowlist.
+- New UI needs a jsdom test in `tests/component/` and, if it touches a privacy claim, an assertion in `e2e/privacy.spec.ts`.
 - Commit messages: `type(scope): summary`, where type ∈ {feat, fix, test, docs, chore, refactor}. Scope is the area (`parser`, `compare`, `ui`, `privacy`).
 
 ## Definitions that are easy to get wrong
@@ -65,6 +68,20 @@ tests/          unit/, component/, fixtures/env/ (parser corpus)
 - Duplicates: the **last** assignment wins, and a diagnostic reports both lines.
 - `#` truncates an unquoted value — `PASSWORD=abc#123` is `abc`. This is surfaced as a warning, not a silent fix.
 - `${VAR}` is **not** expanded by dotenv; we only validate that the reference resolves within the same file.
+
+## Verifying a change
+
+```bash
+npm run typecheck     # tsc, project-wide
+npm test              # 281 unit + component tests
+npm run build         # typecheck + production build
+npm run privacy       # storage/network/dependency guard
+npm run check         # all of the above, in the order CI runs them
+```
+
+There is no browser in some sandboxes. If Playwright cannot install, do not silently skip the
+verification: write the e2e assertion anyway, state that it is CI-only, and cover the behaviour
+in a jsdom component test so the logic is still checked.
 
 ## When you are unsure
 
