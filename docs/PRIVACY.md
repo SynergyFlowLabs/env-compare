@@ -1,6 +1,6 @@
 # Privacy
 
-EnvCompare exists to be used with real credentials. That only works if you can satisfy yourself — not take our word — that nothing leaves your browser. This page is the long version of [/privacy](https://env-compare.vercel.app/privacy).
+EnvCompare exists to be used with real credentials. That only works if you can satisfy yourself — not take our word — that nothing leaves your browser. This page is the long version of [/privacy](https://envcompare.vercel.app/privacy).
 
 ## The short version
 

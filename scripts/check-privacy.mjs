@@ -11,7 +11,10 @@
  *   2. every runtime dependency is on a reviewed allowlist, carries the license
  *      it was reviewed under, and ships no install scripts
  *   3. no third-party origins in the built bundle (except allowlisted link targets)
- *   4. no inline <script> and no third-party <script src> in the built HTML
+ *   4. no inline executable <script> and no third-party <script src> in the
+ *      built HTML. `<script type="application/ld+json">` is allowed: it is
+ *      data handed to crawlers, never executed, and it is parsed here to make
+ *      sure it really is JSON and not smuggled code.
  *
  * Run: `npm run privacy` (after `npm run build` for checks 3 and 4).
  */
@@ -245,16 +248,40 @@ if (!existsSync(distDir)) {
   }
 
   const html = readFileSync(join(distDir, 'index.html'), 'utf8');
-  const inlineScripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>/g)];
+
+  // Structured data is the one inline <script> allowed. It is inert — no browser
+  // executes it — but it is still a place code could hide, so each block must
+  // parse as JSON before it is excused.
+  const ldJsonBlocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+  for (const block of ldJsonBlocks) {
+    try {
+      JSON.parse(block[1]);
+    } catch {
+      failures.push('dist/index.html has a JSON-LD block that is not valid JSON; it could be script.');
+    }
+  }
+  if (ldJsonBlocks.length > 0) {
+    notes.push(
+      `dist/index.html carries ${ldJsonBlocks.length} JSON-LD block (structured data, inert, parsed by this check).`,
+    );
+  }
+  const withoutLdJson = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g, '');
+  const inlineScripts = [...withoutLdJson.matchAll(/<script(?![^>]*\bsrc=)[^>]*>/g)];
   if (inlineScripts.length > 0) {
     failures.push('dist/index.html contains an inline <script>; only same-origin modules are allowed.');
   }
-  const externalScripts = [...html.matchAll(/<script[^>]*\bsrc="(?!\/)[^"]*"/g)];
+  const externalScripts = [...withoutLdJson.matchAll(/<script[^>]*\bsrc="(?!\/)[^"]*"/g)];
   if (externalScripts.length > 0) {
     failures.push('dist/index.html loads a script from outside this origin.');
   }
-  const externalLinks = [...html.matchAll(/<link[^>]*\bhref="(https?:[^"]+)"/g)];
-  for (const link of externalLinks) failures.push(`dist/index.html loads an external resource: ${link[1]}`);
+  // `<link rel="canonical">` is metadata, not a fetch. Everything else that
+  // points at another origin is a request the page would actually make.
+  for (const tag of html.matchAll(/<link\b[^>]*>/g)) {
+    const rel = tag[0].match(/\brel="([^"]*)"/)?.[1] ?? '';
+    if (rel === 'canonical') continue;
+    const href = tag[0].match(/\bhref="(https?:[^"]+)"/)?.[1];
+    if (href) failures.push(`dist/index.html loads an external resource: ${href}`);
+  }
   const externalPreloads = [...html.matchAll(/<(?:img|iframe|embed)[^>]*\bsrc="(https?:[^"]+)"/g)];
   for (const preload of externalPreloads) {
     failures.push(`dist/index.html embeds an external resource: ${preload[1]}`);
