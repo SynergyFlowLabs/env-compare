@@ -1,14 +1,15 @@
 import { SiteHeader } from '../components/SiteHeader';
 import { SkipLink } from '../components/SkipLink';
+import { PROSE } from '../lib/prose';
 
 export function About() {
   return (
-    <div className="shell">
+    <div className="flex min-h-screen flex-col">
       <SkipLink />
       <SiteHeader current="about" />
 
-      <main className="shell__main" id="main" tabIndex={-1}>
-        <article className="page">
+      <main className="mx-auto w-full max-w-[1180px] flex-1 px-4 pb-16 sm:px-6" id="main" tabIndex={-1}>
+        <article className={PROSE}>
           <h1>Why this exists</h1>
           <p>
             AI code editors and agents are built not to touch <code>.env</code> files. Instead they

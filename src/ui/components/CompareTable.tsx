@@ -1,7 +1,18 @@
 import { useMemo, useState } from 'react';
-import { PRESENCE_LABEL, sortRows, type Bucket, type Cell, type Comparison, type KeyRow } from '../../core/compare';
+import {
+  PRESENCE_LABEL,
+  sortRows,
+  type Bucket,
+  type Cell,
+  type Comparison,
+  type KeyRow,
+} from '../../core/compare';
 import type { Span } from '../../core/types';
 import { StateChip } from './StateChip';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import { cn } from '../lib/utils';
 
 export type Filter = Bucket | 'all';
 
@@ -24,6 +35,20 @@ interface CompareTableProps {
 
 /** Rows rendered at once before the table asks whether to keep going. */
 const PAGE = 300;
+
+/**
+ * State is carried by tint *and* by the chip's glyph, never by colour alone.
+ * A missing variable is drawn as a dashed socket rather than an empty cell, so
+ * "there is nothing here" reads as a hole in the table instead of a rendering
+ * failure.
+ */
+const CELL_TONE: Record<string, string> = {
+  absent: 'border border-dashed border-missing/40 bg-missing-tint/50',
+  empty: 'bg-empty-tint/60',
+  placeholder: 'bg-placeholder-tint/60',
+  commented: 'bg-commented-tint/60',
+  present: '',
+};
 
 export function CompareTable({
   comparison,
@@ -59,44 +84,48 @@ export function CompareTable({
   };
 
   if (comparison.rows.length === 0) {
-    return <div className="empty">No variables found in these files yet.</div>;
+    return (
+      <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-[13px] text-muted-foreground">
+        No variables found in these files yet.
+      </div>
+    );
   }
 
   return (
     <div>
-      <div className="table-wrap">
-        <table className="compare">
-          <thead>
-            <tr>
-              <th scope="col" className="gutter">
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-10">
                 <span className="sr-only">Line in {reference?.name ?? 'reference file'}</span>
-              </th>
-              <th scope="col">Key</th>
+              </TableHead>
+              <TableHead>Key</TableHead>
               {files.map((file) => (
-                <th
+                <TableHead
                   key={file.fileId}
-                  scope="col"
-                  className={file.role === 'reference' ? 'is-reference' : undefined}
+                  className={file.role === 'reference' ? 'text-foreground' : undefined}
                 >
-                  {file.name}
+                  <span className="mono">{file.name}</span>
                   {file.role === 'reference' ? <span className="sr-only"> (reference)</span> : null}
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {visible.map((row) => {
-              const lineNumber = row.cells.find((c) => c.fileId === comparison.referenceId)?.occurrence?.line;
+              const lineNumber = row.cells.find((c) => c.fileId === comparison.referenceId)
+                ?.occurrence?.line;
               return (
-                <tr key={row.key} className={`row--${row.bucket}`}>
-                  <td className="gutter" aria-hidden="true">
+                <TableRow key={row.key}>
+                  <TableCell className="font-mono text-[11.5px] text-faint" aria-hidden="true">
                     {lineNumber ?? '—'}
-                  </td>
-                  <th scope="row" className="keycell">
-                    {row.key}
+                  </TableCell>
+                  <th scope="row" className="px-2.5 py-1.5 text-left align-middle">
+                    <span className="mono text-[12.5px] font-medium tracking-tight">{row.key}</span>
                     {row.valueDiffers ? (
-                      <span className="state" style={{ marginLeft: 8 }}>
-                        <span className="state__icon" aria-hidden="true">
+                      <span className="ml-2 inline-flex items-center gap-1 align-middle text-[11.5px] font-medium text-differs">
+                        <span className="mono leading-none" aria-hidden="true">
                           ≠
                         </span>
                         <span className="sr-only">Set differently in each file</span>
@@ -106,10 +135,14 @@ export function CompareTable({
                   {files.map((file) => {
                     const cell = row.cells.find((c) => c.fileId === file.fileId);
                     if (!cell) {
-                      return <td key={file.fileId}>—</td>;
+                      return (
+                        <TableCell key={file.fileId} className="text-faint">
+                          —
+                        </TableCell>
+                      );
                     }
                     return (
-                      <td
+                      <TableCell
                         key={file.fileId}
                         aria-label={`${row.key} in ${file.name}: ${PRESENCE_LABEL[cell.presence]}`}
                       >
@@ -128,25 +161,29 @@ export function CompareTable({
                           onCommit={commit}
                           onCancel={() => setEditing(null)}
                         />
-                      </td>
+                      </TableCell>
                     );
                   })}
-                </tr>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {rows.length > limit ? (
-        <p style={{ marginTop: 12, fontSize: 13 }} className="muted">
+        <p className="mt-3 text-[13px] text-muted-foreground">
           Showing the first {limit} of {rows.length} variables.{' '}
-          <button type="button" className="linkish" onClick={() => setLimit(limit + PAGE)}>
+          <Button variant="link" size="sm" className="h-auto p-0" onClick={() => setLimit(limit + PAGE)}>
             Show {Math.min(PAGE, rows.length - limit)} more
-          </button>
+          </Button>
         </p>
       ) : null}
-      {rows.length === 0 ? <div className="empty">Nothing matches this filter.</div> : null}
+      {rows.length === 0 ? (
+        <div className="mt-3 rounded-lg border border-dashed border-border px-4 py-8 text-center text-[13px] text-muted-foreground">
+          Nothing matches this filter.
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -188,8 +225,8 @@ function CellView({
 
   if (isEditing) {
     return (
-      <input
-        className="value-input"
+      <Input
+        className="h-7 font-mono text-[12.5px]"
         value={draft}
         autoFocus
         aria-label={`Value for ${row.key} in ${fileLabel}`}
@@ -210,15 +247,25 @@ function CellView({
     );
   }
 
-  const canEdit = cell.presence === 'present' || cell.presence === 'empty' || cell.presence === 'placeholder';
+  const canEdit =
+    cell.presence === 'present' || cell.presence === 'empty' || cell.presence === 'placeholder';
 
   return (
-    <div className={`cell cell--${cell.presence}`}>
+    <div
+      className={cn(
+        'flex min-h-7 flex-wrap items-center gap-1.5 rounded-sm px-1.5 py-0.5',
+        CELL_TONE[cell.presence],
+      )}
+    >
       <StateChip presence={cell.presence} quiet={cell.presence === 'present'} />
 
-      {cell.presence === 'absent' ? null : cell.presence === 'commented' ? null : (
+      {cell.presence === 'absent' || cell.presence === 'commented' ? null : (
         <span
-          className={`value${hidden ? ' value--masked' : ''}`}
+          className={cn(
+            'mono min-w-0 max-w-[38ch] truncate text-[12.5px] text-foreground',
+            hidden && 'tracking-widest text-faint',
+            canEdit && 'cursor-text rounded-sm hover:bg-secondary/70',
+          )}
           role={canEdit ? 'button' : undefined}
           tabIndex={canEdit ? 0 : undefined}
           title={canEdit ? 'Click to edit' : undefined}
@@ -235,47 +282,55 @@ function CellView({
       )}
 
       {maskValues && !revealed && value !== '' ? (
-        <button
+        <Button
           type="button"
-          className="row-action"
+          variant="ghost"
+          size="sm"
+          className="h-5 px-1.5 text-[11px]"
           onClick={() => actions.onReveal(fileId, row.key)}
           aria-label={`Show the value of ${row.key} in ${fileLabel}`}
         >
           Show
-        </button>
+        </Button>
       ) : null}
 
       {cell.action === 'add' ? (
-        <button
+        <Button
           type="button"
-          className="socket-action"
+          variant="outline"
+          size="sm"
+          className="h-6 border-missing/30 px-1.5 text-[11.5px] text-missing hover:bg-missing-tint"
           onClick={() => actions.onAdd(fileId, row.key)}
           aria-label={`Add ${row.key} to ${fileLabel}`}
         >
           + Add
-        </button>
+        </Button>
       ) : null}
 
       {cell.action === 'uncomment' ? (
-        <button
+        <Button
           type="button"
-          className="row-action"
+          variant="ghost"
+          size="sm"
+          className="h-6 px-1.5 text-[11.5px]"
           onClick={() => cell.occurrence && actions.onUncomment(fileId, cell.occurrence.line)}
           aria-label={`Uncomment ${row.key} in ${fileLabel}`}
         >
           Uncomment
-        </button>
+        </Button>
       ) : null}
 
       {cell.action === 'remove' ? (
-        <button
+        <Button
           type="button"
-          className="row-action"
+          variant="ghost"
+          size="sm"
+          className="h-6 px-1.5 text-[11.5px]"
           onClick={() => cell.occurrence && actions.onRemove(fileId, cell.occurrence.span)}
           aria-label={`Remove ${row.key} from ${fileLabel}`}
         >
           Remove
-        </button>
+        </Button>
       ) : null}
     </div>
   );

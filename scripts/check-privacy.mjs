@@ -7,7 +7,8 @@
  * promise is a build gate instead:
  *
  *   1. no storage / network / tracking APIs in src/
- *   2. the runtime dependencies stay exactly {react, react-dom}
+ *   2. every runtime dependency is on a reviewed allowlist, carries the license
+ *      it was reviewed under, and ships no install scripts
  *   3. no third-party origins in the built bundle (except allowlisted link targets)
  *   4. no inline <script> and no third-party <script src> in the built HTML
  *
@@ -40,7 +41,30 @@ const FORBIDDEN = [
 /** Origins that may appear only as *navigation* targets (anchor hrefs). */
 const ALLOWED_ORIGINS = ['github.com/SynergyFlowLabs/env-compare', 'www.w3.org/2000/svg'];
 
-const ALLOWED_RUNTIME_DEPS = ['react', 'react-dom'];
+/**
+ * Runtime dependencies, reviewed one by one.
+ *
+ * The rule this replaces was "exactly react and react-dom". That was a good
+ * proxy when the interface was hand-written CSS; adopting shadcn/ui means
+ * Radix primitives and a handful of utilities, so the rule becomes an explicit
+ * list with a stated reason per entry. What has NOT changed: nothing here may
+ * touch the network or storage, and the dist scan below still proves it.
+ *
+ * Adding an entry is a deliberate act, not a version bump.
+ */
+const REVIEWED_RUNTIME_DEPS = {
+  react: { license: 'MIT', why: 'the UI runtime' },
+  'react-dom': { license: 'MIT', why: 'the UI renderer' },
+  '@radix-ui/react-dialog': { license: 'MIT', why: 'shadcn Dialog: focus trap, portal, aria-modal' },
+  '@radix-ui/react-slot': { license: 'MIT', why: 'shadcn Button asChild' },
+  '@radix-ui/react-tabs': { license: 'MIT', why: 'shadcn Tabs: roving focus, aria-controls' },
+  'class-variance-authority': { license: 'Apache-2.0', why: 'variant maps for shadcn components' },
+  clsx: { license: 'MIT', why: 'conditional class strings' },
+  'tailwind-merge': { license: 'MIT', why: 'resolves conflicting utility classes in cn()' },
+  'lucide-react': { license: 'ISC', why: 'icons, tree-shaken to the ones imported' },
+};
+
+const ALLOWED_RUNTIME_DEPS = Object.keys(REVIEWED_RUNTIME_DEPS);
 
 // ---------------------------------------------------------------- source scan
 
@@ -86,6 +110,23 @@ for (const dep of runtime) {
       `Runtime dependency "${dep}" is not on the allowlist (${ALLOWED_RUNTIME_DEPS.join(', ')}). ` +
         `A dependency is code that runs with access to the user's secrets — discuss it in an issue first.`,
     );
+  }
+}
+for (const dep of runtime) {
+  const reviewed = REVIEWED_RUNTIME_DEPS[dep];
+  if (!reviewed) continue; // already reported above
+  const manifestPath = join(ROOT, 'node_modules', dep, 'package.json');
+  if (!existsSync(manifestPath)) continue;
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  if (typeof manifest.license === 'string' && manifest.license !== reviewed.license) {
+    failures.push(
+      `Runtime dependency "${dep}" now reports license "${manifest.license}", reviewed as "${reviewed.license}". Re-review it.`,
+    );
+  }
+  for (const hook of ['preinstall', 'install', 'postinstall', 'prepare']) {
+    if (manifest.scripts?.[hook]) {
+      failures.push(`Runtime dependency "${dep}" ships a "${hook}" script; install hooks are disabled by policy.`);
+    }
   }
 }
 for (const script of ['preinstall', 'install', 'postinstall']) {
@@ -217,4 +258,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`\n${GREEN}✓${RESET} no storage, no network, no third-party code\n`);
+console.log(`\n${GREEN}✓${RESET} no storage, no network, no unreviewed dependency\n`);

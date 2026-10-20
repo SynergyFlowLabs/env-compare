@@ -37,6 +37,21 @@ Each state also has a `-tint` (background wash) and is paired with a glyph: `⊘
 
 Text drawn *on* a filled colour is not white in both themes: `--on-accent` and `--on-state` flip to near-black in dark mode, where the fills are pastel and `#fff` would sit at roughly 2:1. Every text/background pair in this table is asserted against WCAG AA (4.5:1) by `tests/unit/tokens.test.ts`.
 
+### Stack
+
+The interface is Tailwind v4 with shadcn/ui components under `src/ui/components/ui`. shadcn's semantic
+tokens (`background`, `card`, `primary`, `muted`, `border`, `ring`, `destructive`) are mapped onto the
+palette above in the `@theme` block of `src/styles/global.css`; the six comparison states keep their own
+names (`missing`, `empty`, `placeholder`, `commented`, `ok`, `differs`) because a single "destructive" red
+cannot express "commented out" without losing information.
+
+The practical rules that follow:
+
+- A component never contains a hex value. If a colour is missing, add a token.
+- Radii are 4 / 6 / 10px, text is 15px on the page, 13px in controls, 12.5px in tables and code.
+- shadcn defaults were tuned down (32px control height, 13px control text) to keep the density this
+  document asks for; the component APIs are unchanged, so upstream snippets still paste in.
+
 ### Theme selection
 
 Three explicit choices in the header — **Auto** (follow the OS, the default), **Light**, **Dark** — as segmented buttons with `aria-pressed`. Not a two-state toggle, because "follow my OS" is a real preference that a toggle silently discards.

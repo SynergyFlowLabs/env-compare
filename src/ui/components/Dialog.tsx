@@ -1,4 +1,12 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { Button } from './ui/button';
+import {
+  Dialog as DialogRoot,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
 
 interface DialogProps {
   title: string;
@@ -9,7 +17,11 @@ interface DialogProps {
   destructive?: boolean;
 }
 
-/** Modal with a focus trap light enough for the two dialogs we actually have. */
+/**
+ * Radix owns the focus trap, the Escape key, the portal and `aria-modal` now;
+ * this wrapper only fixes the wording and the button order. The API is kept so
+ * call sites read the same as before.
+ */
 export function Dialog({
   title,
   children,
@@ -18,55 +30,27 @@ export function Dialog({
   onCancel,
   destructive = false,
 }: DialogProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const confirmRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    confirmRef.current?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onCancel();
-      }
-      if (event.key !== 'Tab' || !ref.current) return;
-      const focusable = ref.current.querySelectorAll<HTMLElement>(
-        'button, textarea, input, select, a[href]',
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (!first || !last) return;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onCancel]);
-
   return (
-    <div className="dialog-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
-      <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" ref={ref}>
-        <h2 id="dialog-title">{title}</h2>
-        {children}
-        <div className="dialog__actions">
-          <button type="button" className="btn btn--ghost" onClick={onCancel}>
+    <DialogRoot
+      open
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+    >
+      <DialogContent aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 text-[13px] text-muted-foreground">{children}</div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            ref={confirmRef}
-            type="button"
-            className={destructive ? 'btn btn--primary' : 'btn btn--primary'}
-            onClick={onConfirm}
-          >
+          </Button>
+          <Button variant={destructive ? 'destructive' : 'default'} onClick={onConfirm}>
             {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
   );
 }

@@ -16,13 +16,17 @@ const LINKS: Array<{ page: Page; href: string; label: string }> = [
  */
 export function SiteHeader({ current }: { current: Page }) {
   return (
-    <header className="header">
-      <div className="header__inner">
+    <header className="sticky top-0 z-20 border-b border-border bg-[color-mix(in_srgb,var(--paper)_92%,transparent)] backdrop-blur-md">
+      <div className="mx-auto flex h-14 max-w-[1180px] flex-wrap items-center gap-x-4 gap-y-2 px-4 sm:px-6">
         <Wordmark />
-        <span className="header__spacer" />
-        <nav className="header__nav" aria-label="Site">
+        <span className="flex-1" />
+        <nav className="flex items-center gap-1 text-[13px]" aria-label="Site">
           {LINKS.filter((link) => link.page !== current).map((link) => (
-            <a key={link.page} href={link.href}>
+            <a
+              key={link.page}
+              href={link.href}
+              className="rounded-sm px-2.5 py-1.5 text-muted-foreground no-underline transition-colors hover:bg-secondary hover:text-foreground"
+            >
               {link.label}
             </a>
           ))}

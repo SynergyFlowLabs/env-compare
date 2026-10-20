@@ -1,4 +1,9 @@
 import { useRef, useState, type ChangeEvent, type DragEvent } from 'react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
+import { cn } from '../lib/utils';
 
 const MAX_BYTES = 2 * 1024 * 1024;
 
@@ -63,7 +68,10 @@ export function FilePane({
 
   return (
     <div
-      className={`pane${dragging ? ' pane--drop' : ''}`}
+      className={cn(
+        'flex min-w-0 flex-col rounded-lg border bg-card transition-colors',
+        dragging ? 'border-ring bg-brand-soft/40 ring-[3px] ring-ring/20' : 'border-border',
+      )}
       onDragOver={(event) => {
         event.preventDefault();
         setDragging(true);
@@ -71,25 +79,29 @@ export function FilePane({
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
     >
-      <div className="pane__bar">
-        <label className="sr-only" htmlFor={`name-${id}`}>
+      <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+        <Label htmlFor={`name-${id}`} className="sr-only">
           File name for the {isReference ? 'reference' : 'target'} file
-        </label>
-        <input
+        </Label>
+        <Input
           id={`name-${id}`}
-          className="pane__name"
+          className="h-7 w-auto max-w-[60%] border-transparent bg-transparent px-1 font-mono text-[13px] font-medium hover:border-input focus-visible:border-ring"
           value={name}
           onChange={(event) => onName(event.target.value)}
           spellCheck={false}
           autoComplete="off"
           size={Math.max(name.length, 10)}
         />
-        {isReference ? <span className="pane__role">reference</span> : null}
-        <span className="pane__bar-spacer" />
+        {isReference ? (
+          <span className="rounded-sm border border-differs/25 bg-differs-tint px-1.5 py-0.5 text-[11px] font-medium text-differs">
+            reference
+          </span>
+        ) : null}
+        <span className="flex-1" />
       </div>
 
-      <textarea
-        className="pane__text"
+      <Textarea
+        className="min-h-[220px] flex-1 rounded-none border-0 bg-transparent px-3 py-2.5 font-mono text-[12.5px] leading-relaxed focus-visible:ring-0"
         value={text}
         onChange={(event) => onText(event.target.value)}
         placeholder={isReference ? 'Paste your .env.example here' : 'Paste your .env here'}
@@ -101,23 +113,31 @@ export function FilePane({
         wrap="off"
       />
 
-      <div className="pane__foot">
+      <div className="flex items-center gap-2 border-t border-border px-3 py-1.5 text-[12px] text-muted-foreground">
         <span>
           {keyCount} {keyCount === 1 ? 'variable' : 'variables'} · {lineCount}{' '}
           {lineCount === 1 ? 'line' : 'lines'}
         </span>
-        <span className="pane__foot-spacer" />
-        <button
+        <span className="flex-1" />
+        <Button
           type="button"
-          className="pane__action"
+          variant="ghost"
+          size="sm"
+          className="h-6 px-2 text-[12px]"
           onClick={() => pickerRef.current?.click()}
         >
           Choose file
-        </button>
+        </Button>
         {text ? (
-          <button type="button" className="pane__action" onClick={() => onText('')}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-[12px]"
+            onClick={() => onText('')}
+          >
             Clear
-          </button>
+          </Button>
         ) : null}
         <input
           ref={pickerRef}

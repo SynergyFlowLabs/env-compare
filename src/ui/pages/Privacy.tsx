@@ -1,16 +1,62 @@
+import { Check } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
 import { SkipLink } from '../components/SkipLink';
+import { PROSE } from '../lib/prose';
 
 const SOURCE = 'https://github.com/SynergyFlowLabs/env-compare';
 
+const PROMISES: Array<{ title: string; body: ReactNode }> = [
+  {
+    title: 'Nothing is uploaded.',
+    body: (
+      <>
+        The site is static files. The production Content-Security-Policy sets{' '}
+        <code>connect-src &apos;none&apos;</code>, so the browser refuses any request the page might
+        attempt. There are no API routes and no functions.
+      </>
+    ),
+  },
+  {
+    title: 'Nothing is stored.',
+    body: (
+      <>
+        No <code>localStorage</code>, no <code>sessionStorage</code>, no <code>IndexedDB</code>, no
+        cookies, no service worker. A check in CI fails the build if any of those appear in the
+        source. Even your theme choice lives in memory only, so it resets when you reload.
+      </>
+    ),
+  },
+  {
+    title: 'No third-party code that could report back.',
+    body: (
+      <>
+        No analytics, no tag manager, no error reporter, no CDN fonts. The interface uses shadcn/ui
+        components built on Radix primitives, plus a few small utilities — all open source, all
+        bundled locally, none of them able to reach the network. CI fails the build if a runtime
+        dependency is added without review.
+      </>
+    ),
+  },
+  {
+    title: 'No shareable links.',
+    body: (
+      <>
+        File names and values never enter the URL or the hash, so they cannot end up in browser
+        history, a screenshot of the address bar, or a Referer header.
+      </>
+    ),
+  },
+];
+
 export function Privacy() {
   return (
-    <div className="shell">
+    <div className="flex min-h-screen flex-col">
       <SkipLink />
       <SiteHeader current="privacy" />
 
-      <main className="shell__main" id="main" tabIndex={-1}>
-        <article className="page">
+      <main className="mx-auto w-full max-w-[1180px] flex-1 px-4 pb-16 sm:px-6" id="main" tabIndex={-1}>
+        <article className={PROSE}>
           <h1>Your file never leaves this tab</h1>
           <p>
             EnvCompare is a static page. There is no server of ours to send anything to, and no
@@ -18,50 +64,16 @@ export function Privacy() {
             check it yourself in about thirty seconds.
           </p>
 
-          <h2>Three promises, and how they are enforced</h2>
-          <ul className="checklist">
-            <li>
-              <span className="checklist__yes" aria-hidden="true">
-                ✓
-              </span>
-              <span>
-                <strong>Nothing is uploaded.</strong> The site is static files. The production
-                Content-Security-Policy sets <code>connect-src 'none'</code>, so the browser
-                refuses any request the page might attempt. There are no API routes and no
-                functions.
-              </span>
-            </li>
-            <li>
-              <span className="checklist__yes" aria-hidden="true">
-                ✓
-              </span>
-              <span>
-                <strong>Nothing is stored.</strong> No <code>localStorage</code>, no{' '}
-                <code>sessionStorage</code>, no <code>IndexedDB</code>, no cookies, no service
-                worker. A check in CI fails the build if any of those appear in the source. Even
-                your theme choice lives in memory only, so it resets when you reload.
-              </span>
-            </li>
-            <li>
-              <span className="checklist__yes" aria-hidden="true">
-                ✓
-              </span>
-              <span>
-                <strong>No third-party code.</strong> No analytics, no tag manager, no error
-                reporter, no CDN fonts. The runtime dependencies are React and React DOM, nothing
-                else.
-              </span>
-            </li>
-            <li>
-              <span className="checklist__yes" aria-hidden="true">
-                ✓
-              </span>
-              <span>
-                <strong>No shareable links.</strong> File names and values never enter the URL or
-                the hash, so they cannot end up in browser history, a screenshot of the address
-                bar, or a Referer header.
-              </span>
-            </li>
+          <h2>Four promises, and how they are enforced</h2>
+          <ul className="!list-none !pl-0">
+            {PROMISES.map((promise) => (
+              <li key={promise.title} className="flex gap-2.5">
+                <Check className="mt-1 size-4 shrink-0 text-ok" aria-hidden="true" />
+                <span>
+                  <strong className="text-foreground">{promise.title}</strong> {promise.body}
+                </span>
+              </li>
+            ))}
           </ul>
 
           <h2>Verify it yourself</h2>
