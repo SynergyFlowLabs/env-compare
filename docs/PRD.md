@@ -204,7 +204,7 @@ These are **constitutional**. A PR that violates them is rejected regardless of 
 | NG8 | Reading from the user's filesystem beyond explicit drag-drop/paste of a single file | No directory scanning, no repo access, no `.gitignore` edits |
 | NG9 | Value-level "correctness" judgement (types, URL validity, etc.) | Out of scope; we compare, we do not validate integrations |
 
-The `/mask` page (added 2026-10-21, issue #10) is **not** an exception to any of the above. It parses, masks and serialises CSV entirely in the browser, stores nothing, reads only the single file the reader chooses (the permission NG8 already grants the compare tool), and has no network path at all. It exists because the same promise — a model may see the *shape* of a configuration — answers a second, adjacent question.
+The `/mask` page (added 2026-10-21, issue #10; reshaped by issue #13) is **not** an exception to any of the above. It parses, masks and serialises an **env file** entirely in the browser, stores nothing, reads only the single file the reader chooses (the permission NG8 already grants the compare tool), and has no network path at all. It exists because the same promise — a model may see the *shape* of a configuration — answers a second, adjacent question.
 
 
 ### 4.4 Explicitly out of scope for v1 (revisit later)
@@ -463,23 +463,33 @@ As a developer, I want to see the original text so I trust the analysis.
 **US-23 (P1) — Report a parsing edge case.**
 - **Given** a line the tool misreads, **then** a "Report this" link opens a pre-filled GitHub issue containing the *shape* of the line (e.g. `MULTILINE_KEY="-----BEGIN …"`) and the app version — never the user's actual values — plus a prominent warning never to paste real secrets.
 
-### 8.6 CSV masking page (`/mask`)
+### 8.6 Env masking page (`/mask`)
 
 A second surface on the same promise: hand a model the shape of a configuration without the secrets
-in it. It is not a spreadsheet tool, and it does not weaken §4.3.
+in it. It reads **env files only** — the same format the compare tool reads — and it does not weaken
+§4.3.
 
-**US-24 (P1) — Mask a CSV before sharing it.**
-- **Given** a pasted, typed, dropped or opened CSV, **then** the first row is the header, every row keeps its order, and a row with the wrong field count is padded and reported rather than dropped.
-- **Given** a parsed table, **then** the key column is found by header name and value columns are suggested from header names, from value shapes, or (for a `key,value` file with unhelpful headers) as the rightmost column; the suggestions are masked on arrival.
-- **Given** a column, **then** its mode can be set to do not mask, hide completely, mask the start, mask the middle, or mask the end, with 2–8 characters kept where a mode keeps any.
-- **Given** a key, **then** a per-key override wins over its column, including when the column itself is not masked.
-- **Given** a masked cell, **then** its original can be revealed for that cell and put back; the reveal lives in memory and dies with the tab.
+The first version of this page treated its input as CSV and guessed at columns (issue #13). That was
+wrong in a way that mattered: a `.env` file has no header and no delimiter, so the guess turned the
+banner comment into a column title, invented `Column 2…N`, listed comments as rows, and — for a file
+without comments — consumed the **first variable as the header**, printing its value as a column name
+and dropping it from the export. The model is now fixed: exactly two columns, and nothing inferred.
+
+**US-24 (P1) — Mask an env file before sharing it.**
+- **Given** a pasted, typed, dropped or opened env file, **then** every `KEY=value` assignment becomes one row with exactly two columns, `key` and `value`, in file order.
+- **Given** a file whose first line is an assignment, **then** that variable is row 1. There is no header row, and a value is never used as a label.
+- **Given** comment lines and blank lines, **then** they are not rows, are excluded from every count, and are reported in the summary ("4 comment lines, 1 blank line skipped").
+- **Given** a line that cannot be read as an assignment, **then** it is counted as unreadable rather than guessed at, and it does not become a variable.
+- **Given** a key defined more than once, **then** the last value wins, as in `dotenv`, and the page says which keys were repeated.
+- **Given** a parsed file, **then** values that look like credentials are masked on arrival, while obvious configuration (`LOG_LEVEL=info`, `PORT=3000`, `NODE_ENV=production`, a credential-free URL) stays readable.
+- **Given** the value setting, **then** it can be do not mask, hide completely, mask the start, mask the middle, or mask the end, with 2–8 characters kept where a mode keeps any.
+- **Given** a key, **then** a per-key override wins over the file-wide setting, including when the file-wide setting is do-not-mask.
+- **Given** a masked value, **then** it can be revealed and re-hidden for that row; the reveal lives in memory and dies with the tab.
 - **Given** the preview, **then** it is rendered from the same function that writes the export, and the exact output text can be inspected before copying.
-- **Given** copy or download, **then** the CSV keeps its header, row and column order, delimiter, line ending and quoting, and contains no masked original.
-- **Given** a column is left open whose values look like credentials, or whose name says it holds one, **then** a warning names it before anything is copied.
-- **Given** the key column itself is masked, **then** a warning says the output will be hard to act on.
+- **Given** copy or download, **then** the output is an env file — one `KEY=masked-value` per line, in file order, quoting only where env syntax requires it — and contains no original value and no comments.
+- **Given** a value left visible that looks like a credential, or whose key name says it holds one, **then** a warning names those keys before anything is copied.
+- **Given** a pasted multi-column CSV, **then** the page says it handles env files rather than guessing a table.
 - **Given** any interaction on the page, **then** no network request is made and nothing is stored.
-
 
 ---
 

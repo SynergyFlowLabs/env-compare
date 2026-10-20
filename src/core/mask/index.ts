@@ -1,13 +1,20 @@
 export {
   MASK_RUN,
-  maskCsv,
+  maskEnv,
   maskValue,
-  maskedText,
+  modeFor,
   normaliseKeep,
-  type MaskCell,
   type MaskMode,
   type MaskSettings,
   type MaskWarning,
-  type MaskedCsv,
+  type MaskedEntry,
+  type MaskedEnv,
 } from './mask';
-export { defaultSettings, suggestKeyColumn, suggestMaskColumns } from './plan';
+export { defaultSettings, keysToMask, shouldMaskOnArrival } from './plan';
+export {
+  formatValue,
+  readEnvSource,
+  serializeEnv,
+  type EnvEntry,
+  type EnvSource,
+} from './env';

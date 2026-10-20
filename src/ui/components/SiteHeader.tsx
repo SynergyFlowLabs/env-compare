@@ -6,7 +6,7 @@ type Page = 'tool' | 'mask' | 'privacy' | 'about';
 
 const LINKS: Array<{ page: Page; href: string; label: string }> = [
   { page: 'tool', href: '/', label: 'Compare' },
-  { page: 'mask', href: '/mask', label: 'Mask a CSV' },
+  { page: 'mask', href: '/mask', label: 'Mask env' },
   { page: 'privacy', href: '/privacy', label: 'Privacy' },
   { page: 'about', href: '/about', label: 'About' },
 ];

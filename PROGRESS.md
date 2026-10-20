@@ -531,6 +531,55 @@ duplicate marker, the warnings, the copy, the exact-output panel and starting ov
 (`tests/component/mask-page.test.tsx`). `e2e/mask.spec.ts` asserts the thing unit tests cannot: filling
 the page, masking and copying makes no request and writes nothing to storage.
 
+### 2026-10-21 — The masking page reads env files, not tables (#13)
+
+Issue #10 built the page on top of a CSV reader. That was the wrong model, and it failed in the way
+that matters: a `.env` file has no header and no delimiter, so the guesswork turned a banner comment
+into a column title, invented `Column 2…N` from the padding, listed comments as rows — and, for a file
+without comments, consumed the **first variable as the header**. Its value was printed as a column
+name, unmasked, and left out of the copy and the download. A masking tool that publishes a value is
+not a formatting bug.
+
+The page now reads the format it is named for, with **exactly two columns and nothing inferred**:
+
+- one row per `KEY=value` assignment, in file order — the first line included;
+- comment lines, blank lines and unreadable lines are not rows. They are **counted** and reported
+  ("4 comment lines, 1 blank line skipped"), because swallowing a third of a file silently is its own
+  bug;
+- duplicate keys resolve the way `dotenv` resolves them — last one wins — and the page names the
+  repeated keys instead of leaving two rows to disagree;
+- a pasted multi-column CSV is refused with "this page handles env files", rather than a guessed table.
+
+**The CSV layer is gone**, not kept "just in case": `src/core/csv` and its 15 tests were deleted with
+the feature that used them. A second input format is a product decision, not an implementation detail,
+and the issue asked for one shape. The masked output is now `.env`-shaped — `KEY=value` per line, no
+comments, `<name>.masked.env` — using the compare engine's own grammar, so the two pages cannot
+disagree about `export`, quoting or trailing comments.
+
+Three details worth recording:
+
+- **Quoting picks the form `dotenv` actually round-trips.** Double quotes expand `\n`/`\r` and strip
+  the quotes; single quotes are taken verbatim. So a value containing `#`, `"` or a backslash is
+  single-quoted (exact), and only newlines force double quotes. `formatValue` is tested by reading its
+  own output back through the parser.
+- **Defaults keep the output useful.** Hiding everything makes the masked file worthless to a model,
+  so obvious configuration (`info`, `3000`, `production`, a credential-free URL) stays visible while
+  anything credential-shaped hides — and a key whose *name* says secret outranks a harmless-looking
+  value.
+- **Warnings name keys, not columns.** "DATABASE_URL, OPENAI_API_KEY are still visible and look like
+  a credential" is actionable in a way "column 2 is not masked" never was.
+
+**Renamed throughout:** the nav entry and page title, the buttons and file picker, `README`, `PRD`
+§8.6/US-24, and the tests. The route stayed `/mask`, which describes the action rather than the format
+and so needs no redirect.
+
+**Tests: 459 (25 files).** Two new suites replace the CSV one: `tests/unit/env-source.test.ts` (12,
+covering the banner, the first line, comments, blanks, duplicates, quoting round-trips and the
+wide-CSV refusal) and a rewritten `tests/unit/mask.test.ts` (18). The 19 component tests now assert the
+two-column shape and the issue's actual regressions — no value in a heading or summary, no comment as a
+row, first line as a row — and `e2e/mask.spec.ts` checks the same shape against real layout, with the
+no-request and no-storage promises unchanged.
+
 ## Decisions made during implementation
 
 | Date | Decision | Why |
@@ -560,9 +609,10 @@ the page, masking and copying makes no request and writes nothing to storage.
 | 2026-10-20 | Consent is asked at the action, not on load | A banner on load is the pattern the design brief rules out; a question at the moment of the action can explain itself and "no" costs nothing |
 | 2026-10-20 | The agent prompt opens a dialog as well as copying | The prompt is the one export that leaves the tab (pasted into an agent); the reader should see it, and a blocked clipboard needs somewhere to fall back to |
 | 2026-10-20 | Auto-advance is a state flag, not a derived condition | "Both files have keys" is not the same as "the reader wants the results"; conflating them made the editor unusable |
-| 2026-10-21 | CSV masking is a separate page (`/mask`), not a mode inside the tool | The compare page's state is about files and roles; a CSV has columns and keys. One page per question, and the header makes the second one discoverable |
+| 2026-10-21 | Masking is a separate page (`/mask`), not a mode inside the tool | The compare page's state is about files and roles; masking is a different job with a different output. One page per question, and the header makes the second one discoverable |
 | 2026-10-21 | Masking modes are named by what stays visible | "Mask the start" is ambiguous until you know which end survives; the labels and the preview settle it, and `hide` is the only mode that also hides the length |
-| 2026-10-21 | The masked CSV keeps the source's delimiter and line ending | The file came from somewhere — a spreadsheet, a secret manager — and going back into that tool should not need a re-import |
+| 2026-10-21 | The masking page reads env files only, in a fixed two-column shape | A `.env` has no header or delimiter, so guessing one published a real value as a column title (#13). One input format is also one promise to keep |
+| 2026-10-21 | Masked output is `.env`-shaped and drops comments | The artefact is for a model or a ticket, not a restore point; comments are where people paste real endpoints and reminders, and the value is what had to be protected |
 | 2026-10-21 | Raw panes sync by scroll fraction, not by line number | The two files are different lengths — that is why they are being compared — so equal fractions keep the reader in the same relative place, where equal line numbers run off the shorter file |
 | 2026-10-21 | Scroll sync is on by default, with a visible toggle | Synced is the reason the raw view exists side by side; the toggle is for the case where one file needs reading on its own, and hiding it would make a stuck pane look like a bug |
 | 2026-10-21 | Social images are generated SVG with a separate raster step, not drawn PNGs | The copy is the part that will change; text in a diff is reviewable, and resvg is the only build-time dependency and it never ships |
@@ -577,12 +627,12 @@ the page, masking and copying makes no request and writes nothing to storage.
 | Check | Command | Result |
 | --- | --- | --- |
 | Types | `npx tsc -p tsconfig.json` | ✅ clean |
-| Unit + component tests | `npm test` | ✅ 455 passed (25 files) |
+| Unit + component tests | `npm test` | ✅ 459 passed (25 files) |
 | dotenv conformance | `npm test` | ✅ 32 fixtures × 2 assertions |
 | Build | `npm run build` | ✅ 444 kB on disk, 5 files |
 | Privacy guard | `npm run privacy` | ✅ green |
 | E2E | `npm run test:e2e` | ⏳ written, runs in CI (no browser in this sandbox) |
-| CSV masking | `npx vitest run tests/unit/csv.test.ts tests/unit/mask.test.ts` | ✅ 40 tests · round-trip, modes, purity, CSV validity |
+| Env masking | `npx vitest run tests/unit/env-source.test.ts tests/unit/mask.test.ts` | ✅ 30 tests · comments/blanks excluded, round-trip, modes, purity |
 | Social images | `npm run social && npm run social:png` | ✅ 12 SVGs → 12 PNGs; measured ink stays inside the designed margins (96px IG/LinkedIn, 72px X) |
 
 ---
