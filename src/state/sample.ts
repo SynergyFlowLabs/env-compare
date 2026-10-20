@@ -32,18 +32,32 @@ LEGACY_GA_ID=UA-000000-2
 `;
 
 /**
- * A CSV export of the same kind of data (issue #10): a key column and a value
- * column, with one secret repeated so the masking page can show that duplicates
- * still line up after masking. Every value is fake.
+ * A sample `.env` in the shape people actually paste (issue #13): a banner
+ * comment, section headings, blank lines, a duplicate key, a placeholder, and a
+ * password inside a URL. Every value is fake.
  */
-export const SAMPLE_CSV = `key,value,environment
-DATABASE_URL,postgresql://user:password@localhost:5432/app,development
-STRIPE_SECRET_KEY,sk_test_51H8xQ2LkdIwHu7ixFAKEFAKEFAKEFAKE,production
-RESEND_API_KEY,re_123456789_abcdefghijklmnop,production
-SESSION_SECRET,dev-only-not-a-real-secret-0123456789,development
-CDN_BASE_URL,https://cdn.example.com/assets,production
-STRIPE_WEBHOOK_SECRET,whsec_FAKEFAKEFAKEFAKEFAKEFAKEFAKE,production
-SMTP_PASSWORD,hunter2-but-obviously-fake,staging
-API_TIMEOUT_MS,30000,production
-LOG_LEVEL,info,production
+export const SAMPLE_ENV = `# ============================================
+# ZeroExam v3 — Environment Variables
+# Copy to .env, then fill in the values. Never commit .env to git.
+# ============================================
+
+# --- Auth ---
+BETTER_AUTH_SECRET=dev-only-not-a-real-secret-0123456789
+BETTER_AUTH_URL=https://app.example.com
+
+# --- AI providers ---
+GOOGLE_GENERATIVE_AI_API_KEY=AIzaFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKE
+LANGFUSE_PUBLIC_KEY=pk-lf-1234567890
+LANGFUSE_SECRET_KEY=sk-lf-abcdefabcdefabcdef
+
+# --- Database ---
+DATABASE_URL=postgresql://user:hunter2@localhost:5432/zeroexam
+REDIS_URL=redis://localhost:6379
+
+# Repeated on purpose: the last one wins, and the page should say so.
+LOG_LEVEL=debug
+LOG_LEVEL=info
+
+PORT=3000
+NODE_ENV=production
 `;

@@ -1,8 +1,7 @@
-import { parseCsv, type CsvTable } from '../core/csv';
-import { defaultSettings, type MaskMode } from '../core/mask';
+import { defaultSettings, readEnvSource, type EnvSource, type MaskMode } from '../core/mask';
 
 /**
- * State for the CSV masking page.
+ * State for the env masking page.
  *
  * The same rule as the comparison tool: one reducer, no persistence, and no
  * place to put the pasted text except this object, which dies with the tab.
@@ -14,15 +13,15 @@ export interface MaskState {
   /** What the reader pasted or opened, untouched. */
   text: string;
   fileName: string;
-  table: CsvTable | null;
+  source: EnvSource | null;
   error: string | null;
-  columnModes: Record<number, MaskMode>;
-  /** Key name → mode, overriding its column. Empty means "follow the column". */
+  /** Mode for every value without a per-key override. */
+  valueMode: MaskMode;
+  /** Key name → mode, overriding `valueMode`. */
   keyModes: Record<string, MaskMode>;
-  keyColumn: number | null;
   keep: number;
-  /** `${row}:${column}` cells the reader has chosen to look at, in this tab only. */
-  revealed: string[];
+  /** Indices of entries whose original value is visible in this tab. */
+  revealed: number[];
   toast: string | null;
 }
 
@@ -30,10 +29,10 @@ export type MaskAction =
   | { type: 'load'; text: string; fileName?: string }
   | { type: 'fail'; message: string }
   | { type: 'clear' }
-  | { type: 'column'; column: number; mode: MaskMode }
-  | { type: 'key'; key: string; mode: MaskMode | 'column' }
+  | { type: 'mode'; mode: MaskMode }
+  | { type: 'key'; key: string; mode: MaskMode | 'file' }
   | { type: 'keep'; keep: number }
-  | { type: 'reveal'; row: number; column: number }
+  | { type: 'reveal'; index: number }
   | { type: 'hide-reveals' }
   | { type: 'reset' }
   | { type: 'toast'; message: string | null };
@@ -41,61 +40,64 @@ export type MaskAction =
 export const initialMaskState: MaskState = {
   text: '',
   fileName: '',
-  table: null,
+  source: null,
   error: null,
-  columnModes: {},
+  valueMode: 'hide',
   keyModes: {},
-  keyColumn: null,
   keep: 4,
   revealed: [],
   toast: null,
 };
 
+/** The message for a paste that has no variables in it, whatever it does have. */
+function emptyMessage(source: EnvSource): string {
+  if (source.looksLikeTable) {
+    return 'That looks like a multi-column CSV. This page masks .env files — one KEY=value per line.';
+  }
+  return 'No KEY=value lines found. An env file needs at least one variable.';
+}
+
 export function maskReducer(state: MaskState, action: MaskAction): MaskState {
   switch (action.type) {
     case 'load': {
-      const table = parseCsv(action.text);
-      if (table.rows.length === 0) {
+      const source = readEnvSource(action.text);
+      if (source.entries.length === 0) {
         return {
           ...state,
           text: action.text,
           fileName: action.fileName ?? '',
-          table: null,
-          error: 'No rows found. A CSV needs a header row and at least one row of values.',
+          source: null,
+          error: emptyMessage(source),
         };
       }
-      const settings = defaultSettings(table);
+      const settings = defaultSettings(source);
       return {
         ...state,
         text: action.text,
         fileName: action.fileName ?? '',
-        table,
+        source,
         error: null,
-        columnModes: { ...settings.columnModes },
-        keyModes: {},
-        keyColumn: settings.keyColumn ?? null,
+        valueMode: settings.valueMode,
+        keyModes: { ...settings.keyModes },
         revealed: [],
         toast: null,
       };
     }
 
     case 'fail':
-      return { ...state, error: action.message, table: null };
+      return { ...state, error: action.message, source: null };
 
     case 'clear':
       return { ...initialMaskState, keep: state.keep };
 
-    case 'column':
-      // Per-key overrides deliberately survive a column change: masking one key
-      // in an otherwise-open column is a supported (and useful) combination.
-      return {
-        ...state,
-        columnModes: { ...state.columnModes, [action.column]: action.mode },
-      };
+    case 'mode':
+      // The file-wide mode replaces per-key overrides: "hide everything" must
+      // mean everything, or the button would leave quiet exceptions behind.
+      return { ...state, valueMode: action.mode, keyModes: {} };
 
     case 'key': {
       const keyModes = { ...state.keyModes };
-      if (action.mode === 'column') delete keyModes[action.key];
+      if (action.mode === 'file') delete keyModes[action.key];
       else keyModes[action.key] = action.mode;
       return { ...state, keyModes };
     }
@@ -104,10 +106,9 @@ export function maskReducer(state: MaskState, action: MaskAction): MaskState {
       return { ...state, keep: action.keep };
 
     case 'reveal': {
-      const id = `${action.row}:${action.column}`;
-      const revealed = state.revealed.includes(id)
-        ? state.revealed.filter((item) => item !== id)
-        : [...state.revealed, id];
+      const revealed = state.revealed.includes(action.index)
+        ? state.revealed.filter((item) => item !== action.index)
+        : [...state.revealed, action.index];
       return { ...state, revealed };
     }
 
@@ -115,12 +116,11 @@ export function maskReducer(state: MaskState, action: MaskAction): MaskState {
       return { ...state, revealed: [] };
 
     case 'reset':
-      if (!state.table) return state;
+      if (!state.source) return state;
       return {
         ...state,
-        columnModes: { ...defaultSettings(state.table).columnModes },
-        keyModes: {},
-        keyColumn: state.keyColumn,
+        valueMode: defaultSettings(state.source).valueMode,
+        keyModes: { ...defaultSettings(state.source).keyModes },
         revealed: [],
       };
 

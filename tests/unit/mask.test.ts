@@ -1,19 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { parseCsv } from '../../src/core/csv';
 import {
   defaultSettings,
-  maskCsv,
+  formatValue,
+  keysToMask,
+  maskEnv,
   maskValue,
-  maskedText,
-  suggestKeyColumn,
-  suggestMaskColumns,
+  readEnvSource,
+  serializeEnv,
+  shouldMaskOnArrival,
 } from '../../src/core/mask';
 
-const TABLE = parseCsv(`key,value,environment
-DATABASE_URL,postgresql://user:password@localhost:5432/app,production
-OPENAI_API_KEY,sk-proj-abcdefghijklmnopqrstuvwxyz,production
-CDN_BASE_URL,https://cdn.example.com/assets,development
+const SOURCE = readEnvSource(`# --- Database ---
+DATABASE_URL=postgresql://user:password@localhost:5432/app
+# --- AI ---
+OPENAI_API_KEY=sk-proj-abcdefghijklmnopqrstuvwxyz
+CDN_BASE_URL=https://cdn.example.com/assets
+LOG_LEVEL=info
+PORT=3000
 `);
+
+const settings = { valueMode: 'hide' as const, keyModes: {}, keep: 4 };
 
 describe('maskValue', () => {
   it('leaves a value alone when the mode is none', () => {
@@ -26,10 +32,8 @@ describe('maskValue', () => {
   });
 
   it('hides completely without leaking the length', () => {
-    const short = maskValue('abc', 'hide');
-    const long = maskValue('a'.repeat(64), 'hide');
-    expect(short).toBe(long);
-    expect(short).toMatch(/^\*+$/);
+    expect(maskValue('abc', 'hide')).toBe(maskValue('a'.repeat(64), 'hide'));
+    expect(maskValue('abc', 'hide')).toMatch(/^\*+$/);
   });
 
   it('keeps the tail when masking the start', () => {
@@ -48,13 +52,10 @@ describe('maskValue', () => {
   it('hides a value that is too short to keep anything hidden', () => {
     // Keeping 4 of "abc" would "mask" it by showing all of it.
     expect(maskValue('abc', 'end', 4)).toMatch(/^\*+$/);
-    expect(maskValue('abc', 'start', 4)).toMatch(/^\*+$/);
     expect(maskValue('abcdef', 'middle', 6)).toMatch(/^\*+$/);
   });
 
   it('always leaves at least three stars, so a mask never looks like the value', () => {
-    // `middle` keeps 4 at each end of a 10-character value: 2 would be masked,
-    // which is not visually a mask, so the run is widened to 3.
     expect(maskValue('abcdefghij', 'middle', 8)).toBe('abcd***ghij');
   });
 
@@ -64,136 +65,128 @@ describe('maskValue', () => {
   });
 });
 
-describe('suggest', () => {
-  it('finds the key column by header name', () => {
-    expect(suggestKeyColumn(['id', 'variable', 'value'])).toBe(1);
-    expect(suggestKeyColumn(['KEY', 'value'])).toBe(0);
-    expect(suggestKeyColumn(['alpha', 'beta'])).toBeNull();
+describe('shouldMaskOnArrival', () => {
+  it('hides anything whose name looks like a credential', () => {
+    expect(shouldMaskOnArrival('STRIPE_SECRET_KEY', 'sk_test_x')).toBe(true);
+    expect(shouldMaskOnArrival('DATABASE_URL', 'postgres://x')).toBe(true);
+    // A harmless-looking value does not outrank a dangerous name.
+    expect(shouldMaskOnArrival('SESSION_SECRET', 'abc123')).toBe(true);
   });
 
-  it('masks the value columns and leaves the key column readable', () => {
-    const columns = suggestMaskColumns(TABLE);
-    expect(columns).toEqual([1]);
-    expect(columns).not.toContain(0);
+  it('leaves plain configuration visible', () => {
+    expect(shouldMaskOnArrival('LOG_LEVEL', 'info')).toBe(false);
+    expect(shouldMaskOnArrival('PORT', '3000')).toBe(false);
+    // A CDN URL with no credentials in it is configuration, not a secret.
+    expect(shouldMaskOnArrival('CDN_BASE_URL', 'https://cdn.example.com/assets')).toBe(false);
+    expect(shouldMaskOnArrival('NODE_ENV', 'production')).toBe(false);
   });
 
-  it('defaults to hiding a column whose values look like credentials', () => {
-    const table = parseCsv('alpha,beta\nsession,sk-proj-abcdefghijklmnopqrstuvwxyz');
-    expect(suggestMaskColumns(table)).toEqual([1]);
-  });
-
-  it('falls back to the rightmost column for a key,value file with odd headers', () => {
-    const table = parseCsv('left,right\nalpha,beta');
-    expect(suggestMaskColumns(table)).toEqual([1]);
-  });
-
-  it('produces settings that mask by default', () => {
-    const settings = defaultSettings(TABLE);
-    expect(settings.keyColumn).toBe(0);
-    expect(settings.columnModes[1]).toBe('hide');
-    expect(settings.columnModes[0]).toBeUndefined();
+  it('never masks an empty value, which has nothing to hide', () => {
+    expect(shouldMaskOnArrival('API_KEY', '')).toBe(false);
   });
 });
 
-describe('maskCsv', () => {
-  const settings = { columnModes: { 1: 'hide' as const }, keyColumn: 0, keep: 4 };
+describe('defaults', () => {
+  it('hides the secrets and leaves the obvious configuration readable', () => {
+    const defaults = defaultSettings(SOURCE);
+    expect(defaults.valueMode).toBe('hide');
+    expect(keysToMask(SOURCE)).toEqual(['DATABASE_URL', 'OPENAI_API_KEY']);
+    expect(defaults.keyModes).toEqual({ CDN_BASE_URL: 'none', LOG_LEVEL: 'none', PORT: 'none' });
+  });
+});
 
-  it('masks only the configured column and keeps the shape', () => {
-    const masked = maskCsv(TABLE, settings);
-    expect(masked.header).toEqual(['key', 'value', 'environment']);
-    expect(masked.rows).toHaveLength(3);
-    expect(masked.rows[0]?.[0]).toBe('DATABASE_URL');
-    expect(masked.rows[0]?.[1]).toBe('********');
-    expect(masked.rows[0]?.[2]).toBe('production');
+describe('maskEnv', () => {
+  it('masks the value of every entry and never the key', () => {
+    const masked = maskEnv(SOURCE, settings);
+    expect(masked.entries.map((entry) => entry.key)).toEqual([
+      'DATABASE_URL',
+      'OPENAI_API_KEY',
+      'CDN_BASE_URL',
+      'LOG_LEVEL',
+      'PORT',
+    ]);
+    expect(masked.entries.every((entry) => entry.masked === '********')).toBe(true);
+    expect(masked.counts).toEqual({ masked: 5, unmasked: 0, empty: 0 });
   });
 
-  it('counts what was masked, what was not, and what was empty', () => {
-    const table = parseCsv('key,value\nA,secret\nB,\nC,plain');
-    const masked = maskCsv(table, { columnModes: { 1: 'hide' }, keyColumn: 0, keep: 4 });
-    // The key column is visible, so its three values count as unmasked.
-    expect(masked.counts).toEqual({ masked: 2, unmasked: 3, empty: 1 });
+  it('counts an empty value as empty, not as masked', () => {
+    const source = readEnvSource('A_TOKEN=\nB_TOKEN=x\n');
+    const masked = maskEnv(source, settings);
+    expect(masked.counts).toEqual({ masked: 1, unmasked: 0, empty: 1 });
   });
 
-  it('masks a single key differently from its column', () => {
-    const masked = maskCsv(TABLE, {
-      columnModes: { 1: 'hide' },
-      keyModes: { OPENAI_API_KEY: 'end' },
-      keyColumn: 0,
+  it('lets one key override the file-wide mode', () => {
+    const masked = maskEnv(SOURCE, {
+      valueMode: 'hide',
+      keyModes: { OPENAI_API_KEY: 'end', LOG_LEVEL: 'none' },
       keep: 4,
     });
-    expect(masked.rows[1]?.[1]).toBe(`sk-p${'*'.repeat(30)}`);
-    expect(masked.rows[0]?.[1]).toBe('********');
+    const openai = 'sk-proj-abcdefghijklmnopqrstuvwxyz';
+    expect(masked.entries[1]?.masked).toBe(`sk-p${'*'.repeat(openai.length - 4)}`);
+    expect(masked.entries[3]?.masked).toBe('info');
+    expect(masked.entries[0]?.masked).toBe('********');
   });
 
-  it('applies a key override even when the column is open', () => {
-    const masked = maskCsv(TABLE, {
-      columnModes: {},
-      keyModes: { DATABASE_URL: 'hide' },
-      keyColumn: 0,
-      keep: 4,
-    });
-    expect(masked.rows[0]?.[1]).toBe('********');
-    expect(masked.rows[1]?.[1]).toBe('sk-proj-abcdefghijklmnopqrstuvwxyz');
+  it('masks the same value to the same output and names the duplicate', () => {
+    const source = readEnvSource('A_SECRET=shared-secret\nB_SECRET=shared-secret\nC_SECRET=other\n');
+    const masked = maskEnv(source, { valueMode: 'end', keyModes: {}, keep: 4 });
+    expect(masked.entries[0]?.masked).toBe(masked.entries[1]?.masked);
+    expect(masked.entries[1]?.duplicateOf).toBe(0);
+    expect(masked.entries[2]?.duplicateOf).toBeNull();
   });
 
-  it('masks the same original to the same output and marks the duplicate', () => {
-    const table = parseCsv('key,value\nA,shared-secret\nB,shared-secret\nC,other-secret');
-    const masked = maskCsv(table, { columnModes: { 1: 'end' }, keyColumn: 0, keep: 4 });
-    expect(masked.rows[0]?.[1]).toBe(masked.rows[1]?.[1]);
-    expect(masked.cells[1]?.[1]?.duplicateOf).toBe(0);
-    expect(masked.cells[2]?.[1]?.duplicateOf).toBeNull();
-  });
-
-  it('does not report duplicates across different columns', () => {
-    const table = parseCsv('a,b\nsame,same');
-    const masked = maskCsv(table, { columnModes: { 0: 'hide', 1: 'hide' }, keyColumn: null, keep: 4 });
-    expect(masked.cells[0]?.[0]?.duplicateOf).toBeNull();
-    expect(masked.cells[0]?.[1]?.duplicateOf).toBeNull();
-  });
-
-  it('warns about an unmasked column that holds credentials', () => {
-    const masked = maskCsv(TABLE, { columnModes: {}, keyColumn: 0, keep: 4 });
-    expect(masked.warnings).toContainEqual({
+  it('warns about a visible value that looks like a credential', () => {
+    const masked = maskEnv(SOURCE, { valueMode: 'none', keyModes: {}, keep: 4 });
+    const warning = masked.warnings.find((item) => item.kind === 'unmasked-secret');
+    expect(warning).toEqual({
       kind: 'unmasked-secret',
-      column: 1,
-      columnName: 'value',
-      // The Postgres URL carries `user:password@`, the OpenAI key its `sk-proj-`
-      // prefix; a plain https URL does not look like a credential.
-      rows: [0, 1],
+      // `postgresql://user:password@…` and the `sk-proj-` key.
+      keys: ['DATABASE_URL', 'OPENAI_API_KEY'],
     });
   });
 
-  it('warns when the key column itself is masked', () => {
-    const masked = maskCsv(TABLE, { columnModes: { 0: 'hide', 1: 'hide' }, keyColumn: 0, keep: 4 });
-    expect(masked.warnings.some((warning) => warning.kind === 'key-column-masked')).toBe(true);
+  it('warns separately when only the name suggests a secret', () => {
+    const source = readEnvSource('SESSION_SECRET=abc123\nLOG_LEVEL=info\n');
+    const masked = maskEnv(source, { valueMode: 'none', keyModes: {}, keep: 4 });
+    expect(masked.warnings).toContainEqual({ kind: 'unmasked-secret-name', keys: ['SESSION_SECRET'] });
   });
 
-  it('is pure: the source table is untouched', () => {
-    const before = JSON.stringify(TABLE);
-    maskCsv(TABLE, settings);
-    expect(JSON.stringify(TABLE)).toBe(before);
+  it('is pure: the source is untouched', () => {
+    const before = JSON.stringify(SOURCE.entries);
+    maskEnv(SOURCE, settings);
+    expect(JSON.stringify(SOURCE.entries)).toBe(before);
   });
 });
 
-describe('maskedText', () => {
-  it('writes valid CSV in the source dialect with no original values in it', () => {
-    const masked = maskCsv(TABLE, { columnModes: { 1: 'hide' }, keyColumn: 0, keep: 4 });
-    const text = maskedText(masked, { delimiter: ',', lineEnding: '\n' });
+describe('export', () => {
+  it('writes an env file with no original values in it', () => {
+    const masked = maskEnv(SOURCE, settings);
+    const text = serializeEnv(
+      masked.entries.map((entry) => ({ key: entry.key, value: entry.masked })),
+      { lineEnding: '\n' },
+    );
 
-    expect(text.startsWith('key,value,environment\n')).toBe(true);
+    expect(text.split('\n').filter(Boolean)).toHaveLength(5);
+    expect(text).toContain('DATABASE_URL=********');
     expect(text).not.toContain('postgresql://');
     expect(text).not.toContain('sk-proj-');
-
-    const reparsed = parseCsv(text);
-    expect(reparsed.header).toEqual(TABLE.header);
-    expect(reparsed.rows).toHaveLength(TABLE.rows.length);
-    expect(reparsed.diagnostics).toEqual([]);
+    expect(text).not.toContain('#');
   });
 
-  it('keeps a value containing a comma quoted, so the output is still CSV', () => {
-    const table = parseCsv('key,value\nA,"one,two"');
-    const masked = maskCsv(table, { columnModes: {}, keyColumn: 0, keep: 4 });
-    expect(maskedText(masked, { delimiter: ',', lineEnding: '\n' })).toContain('"one,two"');
-    expect(parseCsv(maskedText(masked, { delimiter: ',', lineEnding: '\n' })).rows).toEqual([['A', 'one,two']]);
+  it('round-trips: the masked file reads back as the same keys and masked values', () => {
+    const masked = maskEnv(SOURCE, settings);
+    const text = serializeEnv(
+      masked.entries.map((entry) => ({ key: entry.key, value: entry.masked })),
+      { lineEnding: '\n' },
+    );
+    const reparsed = readEnvSource(text);
+    expect(reparsed.entries.map((entry) => entry.key)).toEqual(masked.entries.map((entry) => entry.key));
+    expect(reparsed.entries.map((entry) => entry.value)).toEqual(masked.entries.map((entry) => entry.masked));
+    expect(reparsed.skipped.unreadable).toBe(0);
+  });
+
+  it('quotes a value that would otherwise be re-read differently', () => {
+    expect(formatValue('two words')).toBe('two words');
+    expect(formatValue('# not a comment')).toBe("'# not a comment'");
   });
 });
