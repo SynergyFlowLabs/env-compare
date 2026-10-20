@@ -2,10 +2,11 @@ import { PrivacyBadge, Wordmark } from './Brand';
 import { ThemeConsentDialog } from './ThemeConsentDialog';
 import { ThemeSwitch } from './ThemeSwitch';
 
-type Page = 'tool' | 'privacy' | 'about';
+type Page = 'tool' | 'mask' | 'privacy' | 'about';
 
 const LINKS: Array<{ page: Page; href: string; label: string }> = [
-  { page: 'tool', href: '/', label: 'Tool' },
+  { page: 'tool', href: '/', label: 'Compare' },
+  { page: 'mask', href: '/mask', label: 'Mask a CSV' },
   { page: 'privacy', href: '/privacy', label: 'Privacy' },
   { page: 'about', href: '/about', label: 'About' },
 ];

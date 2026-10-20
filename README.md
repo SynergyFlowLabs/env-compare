@@ -55,6 +55,7 @@ Paste your files, read the summary, fix the table, copy the block. Everything ha
 | **Safe with real secrets** | One click hides values — and removes them from the DOM rather than covering them with CSS. Reports and agent prompts are keys-only by default. |
 | **Honest placeholders** | `changeme`, `your-api-key`, `<your-key>` and `sk_test_xxxx` are placeholders. `test`, `dummy`, `localhost`, `example` and `password` are not: they appear in real values too often. |
 | **Accessible** | Full keyboard path, skip link, visible focus, labelled inputs, real table semantics, and dialogs that trap and restore focus. |
+| **CSV masking for AI handoff** | The [`/mask`](https://envcompare.vercel.app/mask) page takes a CSV of variables and hides the values — completely, or keeping a prefix, middle or suffix — while the keys and the file's own shape stay intact. Per-column and per-key modes, a preview that *is* the export, and no originals in the output. |
 | **No network, no storage** | Static page, no backend, `connect-src 'none'`, no `localStorage`/`sessionStorage`/`IndexedDB`, no analytics. One opt-in cookie holds a theme and nothing else. |
 
 ## Quick start
@@ -120,7 +121,7 @@ Correctness is the whole product. A false "you're missing something" teaches peo
 ## Project layout
 
 ```
-src/core/             parsing, comparison, patches, exporters — pure TypeScript, no DOM
+src/core/             parsing, comparison, patches, exporters, CSV + masking — pure TypeScript, no DOM
 src/state/            one reducer, no persistence
 src/ui/components/    product components
 src/ui/components/ui  shadcn/ui primitives (button, card, dialog, tabs, table…)
@@ -141,7 +142,7 @@ PROGRESS.md           build log and the decisions behind it
 ## Testing
 
 ```bash
-npm test           # 402 unit and component tests
+npm test           # 455 unit and component tests
 npm run check      # + typecheck, production build, privacy guard
 npm run test:e2e   # Playwright, against a production build
 ```
