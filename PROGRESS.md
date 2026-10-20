@@ -2,7 +2,7 @@
 
 Implementation tracker for EnvCompare. The plan comes from [docs/PRD.md](docs/PRD.md); this file records **what is actually built, tested, and pushed**.
 
-**Branch:** `arena/e768a700-env-compare` · **Status:** shipped, docs and launch material ongoing · **Last update:** 2026-10-21
+**Branch:** `arena/85cab603-env-compare` · **Status:** shipped, docs and launch material ongoing · **Last update:** 2026-10-21
 
 ---
 
@@ -572,6 +572,23 @@ Three details worth recording:
 **Renamed throughout:** the nav entry and page title, the buttons and file picker, `README`, `PRD`
 §8.6/US-24, and the tests. The route stayed `/mask`, which describes the action rather than the format
 and so needs no redirect.
+
+### 2026-10-21 — #13 in production
+
+Merged as PR #14 (merge commit `774686c`) and deployed explicitly — git deployments are off for this
+project, so a merge alone would have left the old page live. Deployment
+`dpl_7sw1BpXMzz9rfL4MBkKqZ2ZJd9hG`, `READY` in ~10 s, promoted to `envcompare.vercel.app`.
+
+Checked against the alias, not the build log:
+
+- `/mask` returns **200** with `Content-Security-Policy: … connect-src 'none'` intact — the masking
+  page still has no origin it is allowed to talk to;
+- the served page carries the new copy ("Paste, drop, or open a .env file", "Env text to mask"), and
+  the bundle built from `774686c` contains "Mask env" for the header entry;
+- `npm run check` and `npm run privacy` were green on the merge commit before deploying.
+
+The route stayed `/mask`, so nothing had to redirect: the fix changed what the page reads, not where
+it lives.
 
 **Tests: 459 (25 files).** Two new suites replace the CSV one: `tests/unit/env-source.test.ts` (12,
 covering the banner, the first line, comments, blanks, duplicates, quoting round-trips and the
