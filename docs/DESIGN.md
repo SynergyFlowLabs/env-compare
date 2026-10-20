@@ -33,9 +33,34 @@ The comparison table is the product. Everything else gets out of its way.
 | `--st-ok` | `#2F6B4F` | `#6FD3A0` | set |
 | `--st-differs` | `#1F6F8B` | `#7DD3E8` | different value |
 
-Each state also has a `-tint` (background wash) and is paired with a glyph: `⊘` missing, `!` empty, `✎` placeholder, `⫽` commented, `✓` set, `≠` different.
+Each state also has a `-tint` (background wash) and is paired with a Lucide line icon:
+
+| State | Icon | Why |
+| --- | --- | --- |
+| missing | `MinusCircle` | a hole in the set, not a warning sign |
+| empty | `CircleAlert` | present but unusable |
+| placeholder | `PenLine` | still the example, waiting to be written |
+| commented | `Slash` | in the file, out of play |
+| set | `Check` | the quiet default |
+| different | `EqualNot` | two files disagree, neither is wrong |
+
+Icons replaced the earlier typographic glyphs (`⊘ ! ✎ ⫽ ✓ ≠`): they inherit the text colour, scale with
+the row, and do not depend on the reader's font having the character. The rule they serve is unchanged —
+every state is icon **and** word, so colour is never the only signal.
 
 Text drawn *on* a filled colour is not white in both themes: `--on-accent` and `--on-state` flip to near-black in dark mode, where the fills are pastel and `#fff` would sit at roughly 2:1. Every text/background pair in this table is asserted against WCAG AA (4.5:1) by `tests/unit/tokens.test.ts`.
+
+### Icons
+
+[Lucide](https://lucide.dev) is the icon set (it is also shadcn's default, so the states and the controls
+share one language).
+
+- Import named icons (`import { Copy } from 'lucide-react'`), never a namespace: only the ones used are bundled.
+- Decorative icons get `aria-hidden="true"` and `focusable="false"`; the adjacent word carries the meaning.
+- Icon-only buttons always carry an `aria-label` (rename, close, reveal).
+- Sizes are fixed at `size-3.5` (inline with 12–13px text) and `size-4` (toolbar and status). One stroke
+  weight, 1.75, set once for `svg.lucide` in `global.css`.
+- No icon is used as the only label for a destructive action, and none spins or animates.
 
 ### Stack
 

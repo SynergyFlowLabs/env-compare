@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { CircleMinus } from 'lucide-react';
 import type { Comparison, Presence } from '../../core/compare';
 import type { ParsedFile, SourceLine } from '../../core/types';
 import { splitLines } from '../../core/parse';
@@ -82,8 +83,8 @@ function RawPane({
               key={`m-${item.key}-${index}`}
               className="flex items-center gap-2 border-y border-dashed border-missing/35 bg-missing-tint/50 px-3 py-0.5"
             >
-              <span className="w-7 shrink-0 text-right text-[11px] text-missing select-none" aria-hidden="true">
-                +
+              <span className="flex w-7 shrink-0 justify-end text-missing" aria-hidden="true">
+                <CircleMinus className="size-3" />
               </span>
               <span className="mono text-[12.5px] text-missing">{item.key}</span>
               <span className="ml-auto rounded-sm bg-missing/10 px-1.5 text-[10.5px] font-medium tracking-wide text-missing uppercase">

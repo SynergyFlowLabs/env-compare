@@ -1,5 +1,20 @@
-import { useCallback, useEffect, useMemo, useReducer, type ReactNode } from 'react';
-import { ArrowLeftRight, Copy, Eye, EyeOff, Pencil } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, type ReactNode } from 'react';
+import {
+  ArrowDownAZ,
+  ArrowLeftRight,
+  Code2,
+  Copy,
+  Eye,
+  EyeOff,
+  GitCompare,
+  ListFilter,
+  Pencil,
+  Table2,
+  Trash2,
+  Wrench,
+  FileCode2,
+  LayoutList,
+} from 'lucide-react';
 import { compare, type Bucket, type Comparison, type FileInput } from '../../core/compare';
 import { parseEnvFile } from '../../core/parse';
 import { buildFixBlock } from '../../core/export';
@@ -21,11 +36,11 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
-const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
-  { id: 'summary', label: 'Summary' },
-  { id: 'table', label: 'Table' },
-  { id: 'raw', label: 'Raw' },
-  { id: 'fix', label: 'Fix' },
+const TABS: ReadonlyArray<{ id: Tab; label: string; icon: typeof Table2 }> = [
+  { id: 'summary', label: 'Summary', icon: LayoutList },
+  { id: 'table', label: 'Table', icon: Table2 },
+  { id: 'raw', label: 'Raw', icon: FileCode2 },
+  { id: 'fix', label: 'Fix', icon: Wrench },
 ];
 
 const FILTERS: Array<{ id: Filter; label: string }> = [
@@ -72,12 +87,34 @@ export function Tool() {
       (targetSummary?.counts.commented ?? 0) >
       0;
 
-  // Paste is a deliberate act: once both sides have variables, show the result.
+  /**
+   * Paste is a deliberate act: once both sides have variables, show the result.
+   *
+   * This used to run on every render where both sides had keys, which meant
+   * "Edit files" was undone a tick later — the editor appeared and vanished
+   * before anyone could type in it. `autoAdvance` is now the gate: a paste or
+   * the example sets it, choosing "Edit files" clears it, and only then does
+   * this effect fire.
+   */
   useEffect(() => {
-    if (bothHaveKeys && state.view === 'input') {
-      dispatch({ type: 'view', view: 'results' });
+    if (state.autoAdvance && bothHaveKeys && state.view === 'input') {
+      dispatch({ type: 'advance' });
     }
-  }, [bothHaveKeys, state.view]);
+  }, [state.autoAdvance, bothHaveKeys, state.view]);
+
+  // Returning to the editor should put the cursor where the work is, without
+  // stealing focus on first load.
+  const previousView = useRef(state.view);
+  useEffect(() => {
+    const returning = previousView.current === 'results' && state.view === 'input';
+    previousView.current = state.view;
+    if (!returning) return;
+    const field = document.getElementById(`text-${referenceFile.id}`);
+    if (field instanceof HTMLTextAreaElement) {
+      field.focus();
+      field.setSelectionRange(field.value.length, field.value.length);
+    }
+  }, [state.view, referenceFile.id]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -141,6 +178,7 @@ export function Tool() {
                   keyCount={parsed.get(file.id)?.effective.size ?? 0}
                   lineCount={countLines(file.text)}
                   onText={(text) => dispatch({ type: 'text', id: file.id, text })}
+                  onPaste={(text) => dispatch({ type: 'paste', id: file.id, text })}
                   onName={(name) => dispatch({ type: 'name', id: file.id, name })}
                   onProblem={(message) => dispatch({ type: 'toast', message })}
                 />
@@ -148,6 +186,12 @@ export function Tool() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px]">
+              {bothHaveKeys ? (
+                <Button type="button" size="sm" onClick={() => dispatch({ type: 'advance' })}>
+                  <GitCompare aria-hidden="true" />
+                  Compare files
+                </Button>
+              ) : null}
               <Button
                 type="button"
                 variant="link"
@@ -163,6 +207,7 @@ export function Tool() {
                 onClick={() => dispatch({ type: 'swapRoles' })}
                 disabled={!referenceFile.text && !targetFile.text}
               >
+                <ArrowLeftRight aria-hidden="true" />
                 Swap which file is the reference
               </Button>
               <span className="text-muted-foreground">
@@ -172,7 +217,7 @@ export function Tool() {
           </section>
         ) : null}
 
-        {bothHaveKeys ? (
+        {state.view === 'results' && bothHaveKeys ? (
           <section className="pt-5" aria-label="Comparison results">
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -187,6 +232,17 @@ export function Tool() {
                 {referenceFile.name} → {targetFile.name}
               </span>
               <span className="flex-1" />
+              {fixBlock.keys.length > 0 ? (
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    void copy(fixBlock.text, `Copied ${fixBlock.keys.length} variables`)
+                  }
+                >
+                  <Copy aria-hidden="true" />
+                  Copy {fixBlock.keys.length} for {targetFile.name}
+                </Button>
+              ) : null}
               <Button
                 variant="outline"
                 size="sm"
@@ -205,6 +261,7 @@ export function Tool() {
                 size="sm"
                 onClick={() => dispatch({ type: 'confirmClear', open: true })}
               >
+                <Trash2 aria-hidden="true" />
                 Clear all
               </Button>
             </div>
@@ -221,6 +278,7 @@ export function Tool() {
               <TabsList aria-label="Views">
                 {TABS.map((tab, index) => (
                   <TabsTrigger key={tab.id} value={tab.id}>
+                    <tab.icon aria-hidden="true" />
                     {tab.label}
                     {tab.id === 'table' && problems > 0 ? (
                       <span className="rounded-full bg-secondary px-1.5 text-[11px] font-semibold text-muted-foreground group-data-[state=active]:bg-brand-soft group-data-[state=active]:text-primary">
@@ -235,9 +293,7 @@ export function Tool() {
               <TabsContent value="summary" className="mt-1">
                 <SummaryPanel
                   comparison={comparison}
-                  fixBlock={fixBlock}
                   problems={problems}
-                  onCopy={() => void copy(fixBlock.text, `Copied ${fixBlock.keys.length} variables`)}
                   onShowTable={() => dispatch({ type: 'tab', tab: 'table' })}
                 />
               </TabsContent>
@@ -265,7 +321,17 @@ export function Tool() {
                       dispatch({ type: 'sort', sort: state.sort === 'file' ? 'alpha' : 'file' })
                     }
                   >
-                    {state.sort === 'file' ? 'Sort A–Z' : 'Sort by file order'}
+                    {state.sort === 'file' ? (
+                      <>
+                        <ArrowDownAZ aria-hidden="true" />
+                        Sort A–Z
+                      </>
+                    ) : (
+                      <>
+                        <ListFilter aria-hidden="true" />
+                        Sort by file order
+                      </>
+                    )}
                   </FilterChip>
                 </div>
                 <CompareTable
@@ -407,7 +473,7 @@ function FilterChip({
       aria-pressed={pressed}
       onClick={onClick}
       className={cn(
-        'rounded-full border px-2.5 py-1 text-[12px] leading-none transition-colors',
+        'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[12px] leading-none transition-colors',
         'focus-visible:ring-[3px] focus-visible:ring-ring/30 focus-visible:outline-none',
         pressed
           ? 'border-foreground/20 bg-foreground text-background'
@@ -421,19 +487,13 @@ function FilterChip({
 
 function SummaryPanel({
   comparison,
-  fixBlock,
   problems,
-  onCopy,
   onShowTable,
 }: {
   comparison: Comparison;
-  fixBlock: { text: string; keys: string[] };
   problems: number;
-  onCopy: () => void;
   onShowTable: () => void;
 }) {
-  const targetName = comparison.perFile.find((f) => f.role === 'target')?.name;
-
   return (
     <div className="grid gap-4">
       <div className="grid gap-3 sm:grid-cols-2">
@@ -497,17 +557,9 @@ function SummaryPanel({
               </p>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {fixBlock.keys.length > 0 ? (
-              <Button type="button" onClick={onCopy}>
-                <Copy aria-hidden="true" />
-                Copy {fixBlock.keys.length} for {targetName}
-              </Button>
-            ) : null}
-            <Button type="button" variant="outline" onClick={onShowTable}>
-              Open the table
-            </Button>
-          </div>
+          <Button type="button" variant="outline" onClick={onShowTable}>
+            Open the table
+          </Button>
         </CardContent>
       </Card>
     </div>
@@ -555,9 +607,10 @@ function Footer() {
         How this works
       </a>
       <a
-        className="text-muted-foreground underline underline-offset-2 hover:text-foreground"
+        className="inline-flex items-center gap-1 text-muted-foreground underline underline-offset-2 hover:text-foreground"
         href="https://github.com/SynergyFlowLabs/env-compare"
       >
+        <Code2 className="size-3.5" aria-hidden="true" />
         Source
       </a>
     </footer>

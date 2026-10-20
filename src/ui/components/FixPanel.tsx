@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Bot, Copy, Download, Share2 } from 'lucide-react';
 import type { Comparison } from '../../core/compare';
 import { buildAgentPrompt, buildFixBlock, buildReport, type Redaction } from '../../core/export';
 import { Button } from './ui/button';
@@ -63,6 +64,7 @@ export function FixPanel({ comparison, targetId, targetName, targetText, onCopy,
                   type="button"
                   onClick={() => onCopy(fix.text, `Copied ${fix.keys.length} variables`)}
                 >
+                  <Copy aria-hidden="true" />
                   Copy {fix.keys.length} for {targetName}
                 </Button>
               </div>
@@ -107,6 +109,7 @@ export function FixPanel({ comparison, targetId, targetName, targetText, onCopy,
           )}
           <div className="mt-3 flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={() => onCopy(report, 'Report copied')}>
+              <Share2 aria-hidden="true" />
               Copy report
             </Button>
             <Button
@@ -115,6 +118,7 @@ export function FixPanel({ comparison, targetId, targetName, targetText, onCopy,
               onClick={() => onCopy(prompt, 'Prompt copied')}
               disabled={prompt === ''}
             >
+              <Bot aria-hidden="true" />
               Copy prompt for my agent
             </Button>
           </div>
@@ -132,6 +136,7 @@ export function FixPanel({ comparison, targetId, targetName, targetText, onCopy,
           </p>
           <div className="mt-3 flex gap-2">
             <Button type="button" variant="outline" onClick={() => onDownload(targetName || 'env', targetText)}>
+              <Download aria-hidden="true" />
               Download {targetName || 'env'}
             </Button>
           </div>

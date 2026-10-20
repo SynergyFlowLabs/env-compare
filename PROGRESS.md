@@ -169,6 +169,33 @@ is stated in the PR rather than discovered in production.
 that click through the interface. The shadcn layer changed the markup, not the behaviour — every existing
 test passed without an edit.
 
+### 2026-10-20 — Icons, rename, drop targets, and the "Edit files" bug
+
+Five changes, four small and one that was a real defect.
+
+- **Lucide icons throughout.** The state glyphs (`⊘ ! ✎ ⫽ ✓ ≠`) are now line icons (`MinusCircle`,
+  `CircleAlert`, `PenLine`, `Slash`, `Check`, `EqualNot`); buttons, tabs, the theme switch and the status
+  toast all carry icons. Imported by name so only what is used is bundled, `aria-hidden` when decorative,
+  `aria-label` on icon-only controls, one stroke weight (1.75) set once in CSS.
+- **File names are editable in the card header**, with a visible pencil affordance, a hover/focus border,
+  select-on-focus, Enter/Escape to finish, and a screen-reader hint naming an example (`.env.production`).
+  Renaming to a reference-looking name re-derives which side is the reference.
+- **Both cards are drop targets.** A drag from the desktop shows a "Drop to replace …" overlay and loads
+  the file into that box; a real drag-depth counter stops the overlay flickering over child elements, and
+  the read is still local (`file.text()`), so the promise is intact. `accept` now includes `.env.*`.
+- **The table is the default view.** It is where the work is. The primary "Copy N for .env" action moved
+  into the results bar so it is reachable from every tab rather than only from Summary.
+- **Fixed: "Edit files" bounced straight back to the results.** The auto-advance effect ran on every
+  render where both files had keys, so choosing the editor was undone on the next tick — the editor
+  appeared and vanished. `autoAdvance` now gates it: set by a paste or the sample, cleared when the reader
+  chooses to edit, re-armed by the next paste. Two related bugs fell out of the same fix: the results and
+  the editor were both rendering at once (results are now shown only in the results view), and there was
+  no way back to the comparison except pasting again — there is now a **Compare files** button.
+
+**326 tests**, including six new ones that would each have caught one of the above: rename updates the
+column header, drop loads a file, the table is selected first, the editor survives 30ms, Compare returns,
+and a fresh paste advances again.
+
 ---
 
 ## Decisions made during implementation
@@ -192,6 +219,8 @@ test passed without an edit.
 | 2026-10-20 | Adopted shadcn/ui + Radix, ending the "React only" dependency rule | The dependency rule was a proxy for "no code that can report back"; a reviewed allowlist plus the unchanged dist scan enforces the real rule, and the copy was corrected rather than quietly widened |
 | 2026-10-20 | Tokens stay the only colour source; shadcn's semantic names are mapped onto them | Otherwise two palettes drift and the contrast test stops covering what ships |
 | 2026-10-20 | shadcn components are vendored, not installed as a design-system package | They are source here; upgrading is a deliberate diff, not a lockfile change |
+| 2026-10-20 | Line icons replace the typographic state glyphs | The glyphs depended on the reader's font and drifted in weight; the icon+word rule they served is unchanged |
+| 2026-10-20 | Auto-advance is a state flag, not a derived condition | "Both files have keys" is not the same as "the reader wants the results"; conflating them made the editor unusable |
 | 2026-10-20 | The six comparison states keep their own Tailwind names | `destructive` cannot express "commented out", and collapsing states into one red loses the information the product exists to show |
 
 ---

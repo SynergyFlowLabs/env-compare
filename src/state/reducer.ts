@@ -43,12 +43,23 @@ export interface AppState {
   undo: UndoEntry[];
   toast: Toast | null;
   confirmClear: boolean;
+  /**
+   * Whether the next moment both files have keys should flip to the results.
+   *
+   * Set by a paste or by loading the example, cleared the moment the reader
+   * chooses "Edit files". Without this flag the auto-advance effect fires on
+   * every render after an edit is requested and slams the reader back into the
+   * results — which is exactly the bug this field exists to prevent.
+   */
+  autoAdvance: boolean;
   /** Show the manual-copy dialog when the Clipboard API is unavailable. */
   copyFallback: { text: string; label: string } | null;
 }
 
 export type Action =
   | { type: 'text'; id: string; text: string }
+  | { type: 'paste'; id: string; text: string }
+  | { type: 'advance' }
   | { type: 'name'; id: string; name: string }
   | { type: 'swapRoles' }
   | { type: 'loadSample' }
@@ -75,7 +86,8 @@ export const initialState: AppState = {
   ],
   referenceId: 'a',
   view: 'input',
-  tab: 'summary',
+  // The table is the working surface: it is where the answer is actionable.
+  tab: 'table',
   maskValues: false,
   revealed: [],
   sort: 'file',
@@ -84,6 +96,7 @@ export const initialState: AppState = {
   toast: null,
   confirmClear: false,
   copyFallback: null,
+  autoAdvance: true,
 };
 
 export function reducer(state: AppState, action: Action): AppState {
@@ -92,6 +105,18 @@ export function reducer(state: AppState, action: Action): AppState {
       const files = state.files.map((f) => (f.id === action.id ? { ...f, text: action.text } : f));
       return { ...state, files };
     }
+
+    /**
+     * A paste is a deliberate act and may advance to the results. Typing is not:
+     * it would interrupt someone mid-edit.
+     */
+    case 'paste': {
+      const files = state.files.map((f) => (f.id === action.id ? { ...f, text: action.text } : f));
+      return { ...state, files, autoAdvance: true };
+    }
+
+    case 'advance':
+      return { ...state, view: 'results', autoAdvance: false };
 
     case 'name': {
       const files = state.files.map((f) => (f.id === action.id ? { ...f, name: action.name } : f));
@@ -113,7 +138,7 @@ export function reducer(state: AppState, action: Action): AppState {
         ],
         referenceId: 'a',
         view: 'results',
-        tab: 'summary',
+        tab: 'table',
         filter: 'all',
         revealed: [],
         undo: [],
@@ -126,7 +151,9 @@ export function reducer(state: AppState, action: Action): AppState {
       };
 
     case 'view':
-      return { ...state, view: action.view };
+      // Going back to the editor is a decision; it must not be undone by the
+      // auto-advance effect a tick later.
+      return { ...state, view: action.view, autoAdvance: action.view !== 'input' };
 
     case 'tab':
       return { ...state, tab: action.tab };

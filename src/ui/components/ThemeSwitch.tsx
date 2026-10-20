@@ -1,10 +1,11 @@
+import { Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme, type Theme } from '../lib/theme';
 import { cn } from '../lib/utils';
 
-const OPTIONS: Array<{ value: Theme; label: string; hint: string }> = [
-  { value: 'system', label: 'Auto', hint: 'Follow the operating system' },
-  { value: 'light', label: 'Light', hint: 'Always light' },
-  { value: 'dark', label: 'Dark', hint: 'Always dark' },
+const OPTIONS: Array<{ value: Theme; label: string; hint: string; icon: typeof Sun }> = [
+  { value: 'system', label: 'Auto', hint: 'Follow the operating system', icon: Monitor },
+  { value: 'light', label: 'Light', hint: 'Always light', icon: Sun },
+  { value: 'dark', label: 'Dark', hint: 'Always dark', icon: Moon },
 ];
 
 /**
@@ -29,7 +30,7 @@ export function ThemeSwitch() {
           key={option.value}
           type="button"
           className={cn(
-            'rounded-sm px-2 py-1 text-[12px] leading-none text-muted-foreground transition-colors',
+            'inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[12px] leading-none text-muted-foreground transition-colors',
             'hover:text-foreground',
             'aria-pressed:bg-card aria-pressed:font-semibold aria-pressed:text-foreground aria-pressed:shadow-[0_1px_0_rgb(0_0_0/6%)]',
             'focus-visible:ring-[3px] focus-visible:ring-ring/30 focus-visible:outline-none',
@@ -38,6 +39,7 @@ export function ThemeSwitch() {
           title={option.hint}
           onClick={() => setTheme(option.value)}
         >
+          <option.icon className="size-3.5" aria-hidden="true" focusable="false" />
           {option.label}
         </button>
       ))}

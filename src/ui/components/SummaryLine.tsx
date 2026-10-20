@@ -1,3 +1,4 @@
+import { CircleCheck, Info, TriangleAlert } from 'lucide-react';
 import type { Comparison } from '../../core/compare';
 
 interface SummaryLineProps {
@@ -50,9 +51,7 @@ export function SummaryLine({ comparison }: SummaryLineProps) {
   if (comparison.summary.total === 0) {
     return (
       <p className="flex items-start gap-2 text-[15px] text-muted-foreground" aria-live="polite">
-        <span className="mt-px shrink-0 select-none text-faint" aria-hidden="true">
-          ·
-        </span>
+        <Info className="mt-0.5 size-4 shrink-0 text-faint" aria-hidden="true" focusable="false" />
         <span>Paste both files to see what is missing.</span>
       </p>
     );
@@ -61,9 +60,7 @@ export function SummaryLine({ comparison }: SummaryLineProps) {
   if (clean) {
     return (
       <p className="flex items-start gap-2 text-[15px]" aria-live="polite">
-        <span className="mt-px shrink-0 select-none font-semibold text-ok" aria-hidden="true">
-          ✓
-        </span>
+        <CircleCheck className="mt-0.5 size-4 shrink-0 text-ok" aria-hidden="true" focusable="false" />
         <span>
           Nothing is missing. {targetLabel} matches {referenceLabel} across{' '}
           {comparison.summary.total} {comparison.summary.total === 1 ? 'variable' : 'variables'}.
@@ -74,9 +71,7 @@ export function SummaryLine({ comparison }: SummaryLineProps) {
 
   return (
     <p className="flex items-start gap-2 text-[15px]" aria-live="polite">
-      <span className="mt-px shrink-0 select-none text-missing" aria-hidden="true">
-        ⚠
-      </span>
+      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-missing" aria-hidden="true" focusable="false" />
       <span>
         {clauses.map((clause, index) => (
           <span key={clause.text} className={clause.tone === 'note' ? 'text-muted-foreground' : undefined}>
