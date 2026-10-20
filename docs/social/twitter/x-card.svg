@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity="0.028" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="glow" cx="0.12" cy="0.02" r="0.8">
+      <stop offset="0" stop-color="#2c46c8" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#2c46c8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="#101215"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+  <rect width="1600" height="900" fill="url(#glow)"/>
+      <g transform="translate(72 66)">
+    <rect width="40.00" height="40.00" rx="8.75" fill="#15181c" stroke="rgba(255,255,255,0.09)"/>
+    <rect x="7.50" y="8.75" width="6.25" height="22.50" rx="1.88" fill="#f6f6f3"/>
+    <rect x="26.25" y="8.75" width="6.25" height="8.13" rx="1.88" fill="#f6f6f3" fill-opacity="0.55"/>
+    <rect x="26.25" y="23.13" width="6.25" height="8.13" rx="1.88" fill="#f6f6f3" fill-opacity="0.55"/>
+  </g>
+  <text x="126" y="93" fill="#f6f6f3"
+        font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="-0.2">EnvCompare</text>
+  
+      <text x="72" y="300.0" fill="#f6f6f3"
+        font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="68" font-weight="700" letter-spacing="-1.9">Your .env is</text>
+  <text x="72" y="380.2" fill="#f6f6f3"
+        font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="68" font-weight="700" letter-spacing="-1.9">missing something.</text>
+      <text x="72" y="500" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="31"
+    >Compare 2–8 env files in your browser.</text>
+      <text x="72" y="542" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="31"
+    >Nothing is uploaded.</text>
+      <rect x="72" y="614" width="410" height="80" rx="14" fill="#2c46c8" fill-opacity="0.18" stroke="#2c46c8" stroke-opacity="0.55"/>
+      <text x="277" y="664" fill="#f6f6f3" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="27" font-weight="700" text-anchor="middle">envcompare.vercel.app</text>
+      <g>
+    <rect x="880" y="200" width="648" height="500" rx="18" fill="#171a1f" stroke="rgba(255,255,255,0.09)"/>
+    
+  </g>
+      <text x="908" y="252" fill="#6b7280" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="17" font-weight="600" letter-spacing="1.4">.env.example → .env</text>
+      <g>
+    <rect x="908" y="288" width="592" height="1" fill="rgba(255,255,255,0.07)"/>
+    <text x="908" y="322" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="21">DATABASE_URL</text>
+    
+    <rect x="1310" y="298" width="190" height="38" rx="9" fill="#2f6b4f" fill-opacity="0.18"
+          stroke="#2f6b4f" stroke-opacity="0.55"/>
+    <text x="1405" y="323" fill="#7fc39f" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="19" font-weight="600"
+          text-anchor="middle">Match</text>
+  </g>
+      <g>
+    <rect x="908" y="360" width="592" height="1" fill="rgba(255,255,255,0.07)"/>
+    <text x="908" y="394" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="21">OPENAI_API_KEY</text>
+    
+    <rect x="1310" y="370" width="190" height="38" rx="9" fill="#c0392f" fill-opacity="0.18"
+          stroke="#c0392f" stroke-opacity="0.55"/>
+    <text x="1405" y="395" fill="#e88c84" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="19" font-weight="600"
+          text-anchor="middle">Missing</text>
+  </g>
+      <g>
+    <rect x="908" y="432" width="592" height="1" fill="rgba(255,255,255,0.07)"/>
+    <text x="908" y="466" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="21">STRIPE_SECRET</text>
+    
+    <rect x="1310" y="442" width="190" height="38" rx="9" fill="#6b4fa1" fill-opacity="0.18"
+          stroke="#6b4fa1" stroke-opacity="0.55"/>
+    <text x="1405" y="467" fill="#b4a0dd" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="19" font-weight="600"
+          text-anchor="middle">Placeholder</text>
+  </g>
+      <g>
+    <rect x="908" y="504" width="592" height="1" fill="rgba(255,255,255,0.07)"/>
+    <text x="908" y="538" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="21">REDIS_URL</text>
+    
+    <rect x="1310" y="514" width="190" height="38" rx="9" fill="#1f6f8b" fill-opacity="0.18"
+          stroke="#1f6f8b" stroke-opacity="0.55"/>
+    <text x="1405" y="539" fill="#7fc0d3" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="19" font-weight="600"
+          text-anchor="middle">Different</text>
+  </g>
+      <g>
+    <rect x="908" y="576" width="592" height="1" fill="rgba(255,255,255,0.07)"/>
+    <text x="908" y="610" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="21">FEATURE_FLAG</text>
+    
+    <rect x="1310" y="586" width="190" height="38" rx="9" fill="#9a5b00" fill-opacity="0.18"
+          stroke="#9a5b00" stroke-opacity="0.55"/>
+    <text x="1405" y="611" fill="#dda85a" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="19" font-weight="600"
+          text-anchor="middle">Extra</text>
+  </g>
+      <text x="72" y="848" fill="#6b7280" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="18">open source · MIT · built by @imgul</text></svg>

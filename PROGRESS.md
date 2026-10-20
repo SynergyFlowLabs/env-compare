@@ -2,7 +2,7 @@
 
 Implementation tracker for EnvCompare. The plan comes from [docs/PRD.md](docs/PRD.md); this file records **what is actually built, tested, and pushed**.
 
-**Branch:** `arena/b6d6dd02-env-compare` · **Status:** in progress · **Last update:** 2026-10-20
+**Branch:** `arena/e768a700-env-compare` · **Status:** shipped, docs and launch material ongoing · **Last update:** 2026-10-21
 
 ---
 
@@ -397,6 +397,55 @@ the list. Fixed by rewriting history (26 commits):
 Merge-commit messages still mention the topic branch names (`arena/…`), because that is what the merge
 commits record; they are not authorship.
 
+### 2026-10-21 — Launch material: ten slides, two cards, and the copy that goes with them
+
+The project had a front door (README, banner, preview card) but nothing to post. Three platforms, three
+shapes, one design system:
+
+| Platform | Images | Design size | File |
+| --- | --- | --- | --- |
+| Instagram | 10 slides | 1080 × 1350 (4:5) | 2160 × 2700 PNG |
+| LinkedIn | 1 card | 1200 × 1200 (1:1) | 2400 × 2400 PNG |
+| X | 1 card | 1600 × 900 (16:9) | 3200 × 1800 PNG |
+
+**`scripts/build-social.mjs` is the only source.** Palette tokens, grid, glow, mark, footer and the
+table-row primitive are shared; each slide is a `body()` of a dozen lines. Output is SVG, because SVG is
+text — reviewable in a diff, translatable, editable without an image editor, and rendered by anything.
+`scripts/render-social.py` (resvg-py, `zoom=2.0`) turns it into the PNGs that actually get uploaded.
+
+The carousel is an argument, not a feature list, and the order is the argument: the symptom → why it
+happens (agents will not touch `.env`) → how it drifts → the failures a presence check cannot see →
+why a line diff is the wrong instrument → the product → the six states → N files → the fix, not the
+diagnosis → nothing leaves your tab.
+
+Four things the renders caught that the code did not:
+
+- **A headline is narrower than its font size suggests.** Slide 1 was drawn at 92px and clipped the
+  right margin; the pixel scan (rightmost lit pixel per row) said 45px of a required 96.
+- **An aside anchored at the wrong edge.** Slide 5 printed "1 problem, by name" *starting* at the right
+  margin instead of ending there, so half of it was off-canvas — invisible in the markup, obvious in
+  the measurement.
+- **Colour-only cells do not survive a thumbnail.** The first product slide used six coloured pills
+  with no words, which is a legend the reader has to memorise. Every cell now carries its state as
+  text, and the legend sits on its own slide.
+- **A decorative connector reads as a stray dash.** One `<line>` between two file cards on slide 2
+  looked like a rendering artefact. Removed.
+
+`docs/social/CAPTIONS.md` holds the copy: the ten-slide Instagram caption with 20 hashtags, one alt
+text per slide, the LinkedIn long post, the 5-post X thread, and the posting order, timing and a
+pre-flight checklist. X copy is measured, not estimated — 250 characters for the main post, 244 as X
+counts it (a URL weighs 23 regardless of length).
+
+**The alt text is a single string in two places, so a test pins them together.**
+`tests/unit/social.test.ts` (6 tests) reads the generator, and asserts: ten slides in the published
+order; every card's alt is > 60 characters and unique; `CAPTIONS.md` contains each alt verbatim; every
+PNG exists at exactly 2× the platform's shape and under the upload ceiling; every SVG still sits next
+to its PNG; and the SVGs contain `<text>`, no `<image>` and no base64 — text stays text.
+
+Test count moved 389 → 395, so the badge generator and the README were updated in the same commit.
+Badges are generated, but the *number* in them is a claim, and a claim that is not regenerated is
+drift.
+
 ## Decisions made during implementation
 
 | Date | Decision | Why |
@@ -426,6 +475,9 @@ commits record; they are not authorship.
 | 2026-10-20 | Consent is asked at the action, not on load | A banner on load is the pattern the design brief rules out; a question at the moment of the action can explain itself and "no" costs nothing |
 | 2026-10-20 | The agent prompt opens a dialog as well as copying | The prompt is the one export that leaves the tab (pasted into an agent); the reader should see it, and a blocked clipboard needs somewhere to fall back to |
 | 2026-10-20 | Auto-advance is a state flag, not a derived condition | "Both files have keys" is not the same as "the reader wants the results"; conflating them made the editor unusable |
+| 2026-10-21 | Social images are generated SVG with a separate raster step, not drawn PNGs | The copy is the part that will change; text in a diff is reviewable, and resvg is the only build-time dependency and it never ships |
+| 2026-10-21 | Instagram is 4:5, not 1:1 | The tallest a feed allows — two extra lines of headline before anyone taps |
+| 2026-10-21 | The LinkedIn card is square and the X card is 16:9 | LinkedIn crops anything wider than ~1.91:1; X shows `summary_large_image` uncropped on mobile |
 | 2026-10-20 | The six comparison states keep their own Tailwind names | `destructive` cannot express "commented out", and collapsing states into one red loses the information the product exists to show |
 
 ---
@@ -435,14 +487,17 @@ commits record; they are not authorship.
 | Check | Command | Result |
 | --- | --- | --- |
 | Types | `npx tsc -p tsconfig.json` | ✅ clean |
-| Unit + component tests | `npm test` | ✅ 282 passed (9 files) |
+| Unit + component tests | `npm test` | ✅ 395 passed (21 files) |
 | dotenv conformance | `npm test` | ✅ 32 fixtures × 2 assertions |
-| Build | `npm run build` | ✅ 119 kB gzip (22.3 app + 96.9 vendor) |
+| Build | `npm run build` | ✅ 444 kB on disk, 5 files |
 | Privacy guard | `npm run privacy` | ✅ green |
 | E2E | `npm run test:e2e` | ⏳ written, runs in CI (no browser in this sandbox) |
+| Social images | `npm run social && npm run social:png` | ✅ 12 SVGs → 12 PNGs; measured ink stays inside the designed margins (96px IG/LinkedIn, 72px X) |
 
 ---
 
 ## Next step
 
-**Step 11–12 — tests, docs, CI.** Playwright run in CI, a11y pass, CONTRIBUTING / SECURITY / PRIVACY / LICENSE / issue templates, and the README rewrite.
+**Post it.** Upload the ten Instagram slides in order with the alt text, publish the LinkedIn card with
+the long post, and put the X card in front of the short post — then read which line gets quoted back
+and use that one next time. All of it is in [docs/social/CAPTIONS.md](docs/social/CAPTIONS.md).

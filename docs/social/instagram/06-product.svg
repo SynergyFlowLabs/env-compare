@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity="0.028" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="glow" cx="0.12" cy="0.02" r="0.8">
+      <stop offset="0" stop-color="#2c46c8" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#2c46c8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="1350" fill="#101215"/>
+  <rect width="1080" height="1350" fill="url(#grid)"/>
+  <rect width="1080" height="1350" fill="url(#glow)"/><g transform="translate(96 90)">
+    <rect width="46.00" height="46.00" rx="10.06" fill="#15181c" stroke="rgba(255,255,255,0.09)"/>
+    <rect x="8.63" y="10.06" width="7.19" height="25.88" rx="2.16" fill="#f6f6f3"/>
+    <rect x="30.19" y="10.06" width="7.19" height="9.34" rx="2.16" fill="#f6f6f3" fill-opacity="0.55"/>
+    <rect x="30.19" y="26.59" width="7.19" height="9.34" rx="2.16" fill="#f6f6f3" fill-opacity="0.55"/>
+  </g>
+  <text x="158" y="121" fill="#f6f6f3"
+        font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="-0.2">EnvCompare</text>
+  <text x="984" y="121" fill="#6b7280" text-anchor="end"
+        font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="20">06 / 10</text>
+      <text x="96" y="380.0" fill="#f6f6f3"
+        font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="84" font-weight="700" letter-spacing="-2.4">Meet EnvCompare.</text>
+      <text x="96" y="470" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="33"
+    >Paste your files. Read the table.</text>
+      <text x="96" y="516" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="33"
+    >Copy the block that fixes them.</text>
+      <g>
+    <rect x="96" y="610" width="888" height="500" rx="18" fill="#171a1f" stroke="rgba(255,255,255,0.09)"/>
+    
+  </g>
+      <text x="124" y="664" fill="#6b7280" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16">KEY</text><text x="396" y="664" fill="#f6f6f3" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16">.env</text><text x="566" y="664" fill="#6b7280" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16">.env.local</text><text x="746" y="664" fill="#6b7280" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16">.env.staging</text><rect x="124" y="690" width="832" height="1" fill="rgba(255,255,255,0.07)"/><text x="124" y="724" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="17">DATABASE_URL</text><g>
+                  <rect x="396" y="698" width="140" height="34" rx="7" fill="#2f6b4f" fill-opacity="0.18" stroke="#2f6b4f" stroke-opacity="0.5"/>
+                  <text x="466" y="720" fill="#7fc39f" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">match</text>
+                </g><g>
+                  <rect x="566" y="698" width="140" height="34" rx="7" fill="#2f6b4f" fill-opacity="0.18" stroke="#2f6b4f" stroke-opacity="0.5"/>
+                  <text x="636" y="720" fill="#7fc39f" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">match</text>
+                </g><g>
+                  <rect x="746" y="698" width="150" height="34" rx="7" fill="#2f6b4f" fill-opacity="0.18" stroke="#2f6b4f" stroke-opacity="0.5"/>
+                  <text x="821" y="720" fill="#7fc39f" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">match</text>
+                </g><rect x="124" y="770" width="832" height="1" fill="rgba(255,255,255,0.07)"/><text x="124" y="804" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="17">OPENAI_API_KEY</text><g>
+                  <rect x="396" y="778" width="140" height="34" rx="7" fill="#c0392f" fill-opacity="0.18" stroke="#c0392f" stroke-opacity="0.5"/>
+                  <text x="466" y="800" fill="#e88c84" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">missing</text>
+                </g><g>
+                  <rect x="566" y="778" width="140" height="34" rx="7" fill="#c0392f" fill-opacity="0.18" stroke="#c0392f" stroke-opacity="0.5"/>
+                  <text x="636" y="800" fill="#e88c84" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">missing</text>
+                </g><g>
+                  <rect x="746" y="778" width="150" height="34" rx="7" fill="#c0392f" fill-opacity="0.18" stroke="#c0392f" stroke-opacity="0.5"/>
+                  <text x="821" y="800" fill="#e88c84" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">missing</text>
+                </g><rect x="124" y="850" width="832" height="1" fill="rgba(255,255,255,0.07)"/><text x="124" y="884" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="17">STRIPE_SECRET</text><g>
+                  <rect x="396" y="858" width="140" height="34" rx="7" fill="#6b4fa1" fill-opacity="0.18" stroke="#6b4fa1" stroke-opacity="0.5"/>
+                  <text x="466" y="880" fill="#b4a0dd" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">copy</text>
+                </g><g>
+                  <rect x="566" y="858" width="140" height="34" rx="7" fill="#9a5b00" fill-opacity="0.18" stroke="#9a5b00" stroke-opacity="0.5"/>
+                  <text x="636" y="880" fill="#dda85a" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">empty</text>
+                </g><g>
+                  <rect x="746" y="858" width="150" height="34" rx="7" fill="#9a5b00" fill-opacity="0.18" stroke="#9a5b00" stroke-opacity="0.5"/>
+                  <text x="821" y="880" fill="#dda85a" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">empty</text>
+                </g><rect x="124" y="930" width="832" height="1" fill="rgba(255,255,255,0.07)"/><text x="124" y="964" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="17">REDIS_URL</text><g>
+                  <rect x="396" y="938" width="140" height="34" rx="7" fill="#1f6f8b" fill-opacity="0.18" stroke="#1f6f8b" stroke-opacity="0.5"/>
+                  <text x="466" y="960" fill="#7fc0d3" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">differs</text>
+                </g><g>
+                  <rect x="566" y="938" width="140" height="34" rx="7" fill="#666b72" fill-opacity="0.18" stroke="#666b72" stroke-opacity="0.5"/>
+                  <text x="636" y="960" fill="#9aa0a8" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">extra</text>
+                </g><g>
+                  <rect x="746" y="938" width="150" height="34" rx="7" fill="#2f6b4f" fill-opacity="0.18" stroke="#2f6b4f" stroke-opacity="0.5"/>
+                  <text x="821" y="960" fill="#7fc39f" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">match</text>
+                </g><rect x="124" y="1010" width="832" height="1" fill="rgba(255,255,255,0.07)"/><text x="124" y="1044" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="17">FEATURE_FLAG</text><g>
+                  <rect x="396" y="1018" width="140" height="34" rx="7" fill="#666b72" fill-opacity="0.18" stroke="#666b72" stroke-opacity="0.5"/>
+                  <text x="466" y="1040" fill="#9aa0a8" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">extra</text>
+                </g><g>
+                  <rect x="566" y="1018" width="140" height="34" rx="7" fill="#666b72" fill-opacity="0.18" stroke="#666b72" stroke-opacity="0.5"/>
+                  <text x="636" y="1040" fill="#9aa0a8" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">extra</text>
+                </g><g>
+                  <rect x="746" y="1018" width="150" height="34" rx="7" fill="#666b72" fill-opacity="0.18" stroke="#666b72" stroke-opacity="0.5"/>
+                  <text x="821" y="1040" fill="#9aa0a8" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">extra</text>
+                </g>
+      <circle cx="96" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="118" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="140" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="162" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="184" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="206" cy="1210" r="6" fill="#f6f6f3"/><circle cx="228" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="250" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="272" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="294" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/>
+      <text x="96" y="1282" fill="#6b7280" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="21">envcompare.vercel.app</text></svg>
