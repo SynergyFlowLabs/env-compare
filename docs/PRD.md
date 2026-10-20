@@ -1019,7 +1019,9 @@ Notes:
 2. Check `package.json` dependencies against an allowlist (`react`, `react-dom`, plus dev-only tooling). Any addition requires a `deps-approved` maintainer label.
 3. After the build, scan `dist/**/*.js` for external origins (`https://`, `http://`, protocol-relative `//`) not in a tiny allowlist of unavoidable literals (e.g. the `http://www.w3.org/2000/svg` namespace). Fail on anything else.
 4. Assert `dist/index.html` contains no `<script src>` other than same-origin hashed bundles.
-5. Assert there are no inline `<script>` tags (external modules only).
+5. Assert there are no inline executable `<script>` tags (external modules only). A `<script
+   type="application/ld+json">` block is allowed because browsers never execute it, and the check
+   parses it as JSON first; see §13.8.
 
 The guard prints a human-readable explanation so contributors understand *why* something is blocked, and links to `docs/PRIVACY.md`.
 
@@ -1073,6 +1075,31 @@ defined here and enforced in `scripts/check-privacy.mjs`:
   file; tests assert both that import rule and the value domain.
 - **Everything else is unchanged.** No localStorage, no IndexedDB, no service worker, no third-party
   cookie, no analytics. `connect-src 'none'` remains.
+
+### 13.8 Amendment (2026-10-21): discovery metadata and social previews
+
+The tool is meant to be found and shared, which needs real metadata — but metadata is exactly where
+third-party scripts usually sneak in (tag managers, social SDKs, font loaders). The rules therefore
+change in one narrow way and stay rigid everywhere else.
+
+- **`index.html` carries the full set:** description, canonical URL, `og:*` (type, site, url, title,
+  description, image + dimensions + alt, locale), `twitter:*` with `summary_large_image`, theme
+  colours, an Apple touch icon and a web manifest. All URLs are absolute `https://` on the canonical
+  host, so a preview never depends on the reader's host.
+- **One 1200×630 PNG** (`public/og-image.png`, under 1 MB) is the card for every platform; alt text
+  describes it for screen readers, because a link preview is content too.
+- **Structured data** is a single `WebApplication` JSON-LD block: free, `DeveloperApplication`,
+  linking the repository and the license. It is data, not code.
+- **The `no inline <script>` rule is narrowed, not dropped.** The guard strips
+  `<script type="application/ld+json">…</script>` blocks, requires each to parse as JSON, and then
+  fails on any other inline script. A JSON-LD block that is not valid JSON is treated as an attempt
+  to hide code. Canonical links are likewise excused from the "no external `<link>`" rule — metadata
+  is not a fetch.
+- **Crawler files are part of the build:** `robots.txt`, `sitemap.xml` (only the three routes that
+  `vercel.json` rewrites) and `site.webmanifest`, with long-lived cache headers for immutable assets.
+- **Enforced by tests,** not by intention: `tests/unit/metadata.test.ts` asserts tag values, absolute
+  URLs, title/description lengths, JSON-LD validity, the real pixel size of every icon, and that the
+  sitemap cannot drift from the rewrite list.
 
 ## 14. Technical architecture
 

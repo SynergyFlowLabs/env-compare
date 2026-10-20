@@ -284,6 +284,30 @@ two.
 
 ---
 
+### 2026-10-21 — Found, not just built: canonical domain, preview card, metadata
+
+- **Domain:** `envcompare.vercel.app` claimed for the project (first choice; the fallback
+  `env-compare.vercel.app` is somebody else's). The previous `env-compare-six.vercel.app` alias still
+  resolves, so nothing that was shared before breaks.
+- **Preview card:** `public/og-image.png`, 1200×630, 366 kB. Generated as a designed card, downscaled
+  once with ImageMagick, and checked at full size for legible, correctly spelled text — a preview that
+  is unreadable at 200 px wide is worse than none. A matching 180 px touch icon and 192/512 px manifest
+  icons were drawn from the favicon geometry so the mark is identical everywhere.
+- **Metadata:** description (155 chars), canonical, `robots: index, follow, max-image-preview:large`,
+  the full `og:*` set with image dimensions and alt text, `twitter:summary_large_image`, a single
+  `WebApplication` JSON-LD block, `robots.txt` and `sitemap.xml` covering exactly the three routes
+  `vercel.json` rewrites, plus a web manifest and long-lived cache headers for static assets.
+- **The guard had to learn one word.** It failed the build on the JSON-LD block ("inline script") and
+  on the canonical link ("loads an external resource") — both correct rules, both wrong here. The fix
+  narrows them instead of dropping them: JSON-LD blocks are stripped, must parse as JSON, and any other
+  inline script still fails; only `rel="canonical"` is excused from the external-link rule. Three
+  negative tests (real inline script, Google Fonts stylesheet, JSON-LD with a `fetch()` inside) each
+  fail as they should.
+- **13 new tests** in `tests/unit/metadata.test.ts`, including the actual pixel dimensions of the card
+  and every icon, and a check that the sitemap cannot drift from the rewrite list.
+
+**378 tests**, typecheck, build and guard green.
+
 ## Decisions made during implementation
 
 | Date | Decision | Why |

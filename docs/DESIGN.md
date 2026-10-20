@@ -91,6 +91,20 @@ The layout treats 2 files as the common case and N as a first-class one:
 - The Fix tab carries a target selector once there is more than one target, and the primary copy
   button in the results bar follows the same selection — one idea of "the file I am fixing", not two.
 
+### Social preview card
+
+The link preview is the first screen most people will ever see, so it uses the same rules as the app:
+
+- 1200×630 PNG (1.91:1), under 1 MB, dark surface (`#101215`) so it does not disappear in a white
+  feed, with 64 px of safe margin on every edge.
+- Three ingredients only: the mark and wordmark, one headline at ~110 px ("See what your `.env` is
+  missing."), one supporting line. Readability at thumbnail size decides what survives.
+- The state palette does the explaining: a strip of key rows labelled Match, Missing, Same,
+  Different and Extra, in the same colours the table uses. It looks like the product because it is
+  the product's vocabulary.
+- Text is generated and then checked by eye at full size; the card is a static file, not a runtime
+  render, so it cannot break in production.
+
 ### Theme selection
 
 Three explicit choices in the header — **Auto** (follow the OS, the default), **Light**, **Dark** — as segmented buttons with `aria-pressed`. Not a two-state toggle, because "follow my OS" is a real preference that a toggle silently discards.
