@@ -15,6 +15,19 @@ npm run test:e2e  # Playwright; needs `npx playwright install` first
 
 Before opening a PR, run `npm run check`: tests, build and the privacy guard.
 
+## Badges and README assets
+
+`README.md` is the front door; its images live in `docs/assets/`. Both the banner and the badges are
+SVG with real text (selectable, searchable, no font download), and the badges are generated:
+
+```bash
+node scripts/build-badges.mjs
+```
+
+Edit the table at the top of that file — label, value, colour — never the SVGs. If you change the
+number of tests, change it in the script and in the README prose; `tests/unit/readme.test.ts` fails if
+they disagree, if a referenced asset is missing, or if a badge loses its accessible label.
+
 ## Privacy invariants (not negotiable)
 
 The product is only useful because people paste **real secrets** into it. These rules are enforced by `scripts/check-privacy.mjs` and by CI:

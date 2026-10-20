@@ -360,6 +360,43 @@ cache for an hour (`max-age=3600, s-maxage=3600`), and the card is referenced as
 `og-image.png?v=1` — a new cache key for every scraper, and a version to bump whenever the image
 changes.
 
+### 2026-10-21 — A front door: banner, generated badges, and one contributor identity
+
+**README.** Rewritten to the shape people expect from a maintained project: banner, six badges, the
+problem stated in the tool's own vocabulary, a feature table, quick start with a command table, how
+each privacy guarantee is *enforced*, how the comparison decides, stack, layout, testing, roadmap,
+contributing, contributors, license. The old README was accurate but read like release notes.
+
+**Assets, generated rather than drawn.** `scripts/build-badges.mjs` writes six SVGs from one table of
+labels, values and palette colours. Three decisions worth recording:
+
+- **Local SVG, not shields.io.** The README then renders in forks, offline and inside editors, and
+  viewing it makes no third-party request — the same rule the product follows.
+- **`textLength` + `lengthAdjust="spacingAndGlyphs"`.** Badge text is fitted to a known width, so the
+  layout is identical whatever font the renderer has. No `dominant-baseline`, no font download.
+- **The accessible label is derived from the visible text** (`tests: 389 passing`), so a badge cannot
+  claim one thing to a screen reader and another to a human. A test asserts the badge, the generator
+  and the README all agree on the number.
+
+The banner (`docs/assets/banner.svg`, 1280×320) is the same card as the social preview, in a wider
+aspect: mark, wordmark, headline, one supporting line, and a miniature of the table with real state
+chips. Text stays as text, so it is searchable and translatable.
+
+**One contributor identity.** GitHub's contributor list is derived from commit metadata, not from the
+current tree, so the automation co-author trailers and one bot-authored initial commit kept a bot in
+the list. Fixed by rewriting history (26 commits):
+
+- every commit re-authored to `imgul <92777653+imgul@users.noreply.github.com>`, which is the address
+  GitHub links to the profile;
+- every `Co-authored-by:` trailer removed;
+- `.mailmap` added so old addresses fold into one identity for `git shortlog`, editors and anything
+  else that honours it;
+- `main` force-pushed (`7aaf8a2` → `44232a2`), verified file-for-file identical to the old tip before
+  the push.
+
+Merge-commit messages still mention the topic branch names (`arena/…`), because that is what the merge
+commits record; they are not authorship.
+
 ## Decisions made during implementation
 
 | Date | Decision | Why |
