@@ -188,7 +188,7 @@ describe('crawler files', () => {
   it('lists only pages that are served through the rewrites', () => {
     const sitemap = readFileSync(join(root, 'public/sitemap.xml'), 'utf8');
     const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-    expect(locations).toEqual([`${ORIGIN}/`, `${ORIGIN}/about`, `${ORIGIN}/privacy`]);
+    expect(locations).toEqual([`${ORIGIN}/`, `${ORIGIN}/mask`, `${ORIGIN}/about`, `${ORIGIN}/privacy`]);
 
     const vercel = JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf8')) as {
       rewrites: Array<{ source: string }>;

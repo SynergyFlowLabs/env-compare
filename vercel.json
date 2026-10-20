@@ -11,6 +11,10 @@
     {
       "source": "/about",
       "destination": "/index.html"
+    },
+    {
+      "source": "/mask",
+      "destination": "/index.html"
     }
   ],
   "headers": [

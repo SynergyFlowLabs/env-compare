@@ -485,6 +485,52 @@ with no overflow, keyboard reachability, and the pane labels. jsdom has no layou
 `scrollHeight`/`clientHeight` — the sync is arithmetic on those numbers, and pinning the arithmetic is
 what makes the behaviour testable without a browser.
 
+### 2026-10-21 — A CSV masking page (#10)
+
+The compare tool answers "what is missing from my `.env`". Issue #10 asked the neighbouring question:
+*"I want a model to look at this configuration — how do I let it read the shape without reading the
+secrets?"* Both are answered by the same promise, so the answer is a second surface, **not** a second
+product: `/mask`, a real page load like `/privacy`, sharing the header, the tokens and the privacy
+guard.
+
+**The pipeline is three pure modules.** `src/core/csv` reads RFC 4180 plus the lenient parts everyone
+relies on (BOM, CRLF, quoted commas and newlines, `""` escapes) and reports what it cannot parse
+instead of dropping it. `src/core/mask` applies per-column and per-key modes — hide completely, mask
+the start, middle or end — and `maskedText` writes it back in the file's own dialect. `src/state`
+holds the originals; the export is always derived.
+
+Five decisions worth keeping:
+
+- **Formatting, not encryption.** The page says so in as many words. Asterisks cannot be reversed, and
+  a mask that claims more than that is a lie someone might rely on.
+- **`hide` hides the length; the other modes do not.** A retained prefix is shared data (`sk-live-…`
+  is a prefix, not a mask), so the mode list is worded in terms of *what stays visible*.
+- **A value too short to keep anything is hidden whole.** Keeping 4 of `abc` would "mask" it by
+  showing all of it. A mask that reveals the secret is worse than no mask.
+- **Duplicates are *reported*, not encoded.** Two rows holding the same secret still look identical
+  after masking (often the thing being checked), but the mask is not a hash: a fingerprint suffix
+  would let anyone who can guess the value confirm the guess.
+- **The preview is the export.** Both are `maskCsv` → `maskedText`, so there is no second artefact to
+  drift, and "show the exact output" prints the literal text the copy button writes.
+
+**The defaults are the product's usual asymmetry:** detection may only ever *add* masking. The key
+column is found by header name; value columns from header names, then from value shapes, then (for a
+`key,value` file with unhelpful headers) the rightmost column — and those arrive masked. Two warnings
+run against that: an open column whose values look like credentials (or whose name does), and a key
+column that has itself been masked, which makes the output hard to act on.
+
+**Scope.** This was the one place the issue could have diluted the product, so it was held to the
+constitution rather than bent around it: PRD §4.3 gained a paragraph saying `/mask` is not an exception
+to any non-goal, and §8.6 gained US-24 with the acceptance criteria as testable statements. It reads
+one file the reader chooses — the permission NG8 already granted — and has no network path.
+
+**Tests: 455 (25 files), from 402.** 40 of them are new: 15 for the CSV reader/writer (`tests/unit/csv.test.ts`),
+25 for masking, suggestions and warnings (`tests/unit/mask.test.ts`), plus 13 component tests that
+walk the acceptance criteria — default masking, per-column and per-key modes, reveal-and-restore, the
+duplicate marker, the warnings, the copy, the exact-output panel and starting over
+(`tests/component/mask-page.test.tsx`). `e2e/mask.spec.ts` asserts the thing unit tests cannot: filling
+the page, masking and copying makes no request and writes nothing to storage.
+
 ## Decisions made during implementation
 
 | Date | Decision | Why |
@@ -514,6 +560,9 @@ what makes the behaviour testable without a browser.
 | 2026-10-20 | Consent is asked at the action, not on load | A banner on load is the pattern the design brief rules out; a question at the moment of the action can explain itself and "no" costs nothing |
 | 2026-10-20 | The agent prompt opens a dialog as well as copying | The prompt is the one export that leaves the tab (pasted into an agent); the reader should see it, and a blocked clipboard needs somewhere to fall back to |
 | 2026-10-20 | Auto-advance is a state flag, not a derived condition | "Both files have keys" is not the same as "the reader wants the results"; conflating them made the editor unusable |
+| 2026-10-21 | CSV masking is a separate page (`/mask`), not a mode inside the tool | The compare page's state is about files and roles; a CSV has columns and keys. One page per question, and the header makes the second one discoverable |
+| 2026-10-21 | Masking modes are named by what stays visible | "Mask the start" is ambiguous until you know which end survives; the labels and the preview settle it, and `hide` is the only mode that also hides the length |
+| 2026-10-21 | The masked CSV keeps the source's delimiter and line ending | The file came from somewhere — a spreadsheet, a secret manager — and going back into that tool should not need a re-import |
 | 2026-10-21 | Raw panes sync by scroll fraction, not by line number | The two files are different lengths — that is why they are being compared — so equal fractions keep the reader in the same relative place, where equal line numbers run off the shorter file |
 | 2026-10-21 | Scroll sync is on by default, with a visible toggle | Synced is the reason the raw view exists side by side; the toggle is for the case where one file needs reading on its own, and hiding it would make a stuck pane look like a bug |
 | 2026-10-21 | Social images are generated SVG with a separate raster step, not drawn PNGs | The copy is the part that will change; text in a diff is reviewable, and resvg is the only build-time dependency and it never ships |
@@ -528,11 +577,12 @@ what makes the behaviour testable without a browser.
 | Check | Command | Result |
 | --- | --- | --- |
 | Types | `npx tsc -p tsconfig.json` | ✅ clean |
-| Unit + component tests | `npm test` | ✅ 402 passed (22 files) |
+| Unit + component tests | `npm test` | ✅ 455 passed (25 files) |
 | dotenv conformance | `npm test` | ✅ 32 fixtures × 2 assertions |
 | Build | `npm run build` | ✅ 444 kB on disk, 5 files |
 | Privacy guard | `npm run privacy` | ✅ green |
 | E2E | `npm run test:e2e` | ⏳ written, runs in CI (no browser in this sandbox) |
+| CSV masking | `npx vitest run tests/unit/csv.test.ts tests/unit/mask.test.ts` | ✅ 40 tests · round-trip, modes, purity, CSV validity |
 | Social images | `npm run social && npm run social:png` | ✅ 12 SVGs → 12 PNGs; measured ink stays inside the designed margins (96px IG/LinkedIn, 72px X) |
 
 ---

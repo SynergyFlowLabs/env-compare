@@ -35,10 +35,10 @@ const SLATE = '#5a616b';
 /**
  * Left label, right value, and the colour. The accessible description is derived
  * from the two so it can never contradict them — a badge that says "383 tests"
- * in its label and "402" in its aria-label is a bug waiting to be shipped.
+ * in its label and "455" in its aria-label is a bug waiting to be shipped.
  */
 const BADGES = [
-  { file: 'tests', label: 'tests', value: '402 passing', colour: GREEN },
+  { file: 'tests', label: 'tests', value: '455 passing', colour: GREEN },
   { file: 'license', label: 'license', value: 'MIT', colour: INDIGO },
   { file: 'privacy', label: 'privacy', value: 'no upload · no storage', colour: GREEN },
   { file: 'files', label: 'compares', value: '2–8 files', colour: TEAL },
