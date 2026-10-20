@@ -1097,6 +1097,10 @@ change in one narrow way and stay rigid everywhere else.
   is not a fetch.
 - **Crawler files are part of the build:** `robots.txt`, `sitemap.xml` (only the three routes that
   `vercel.json` rewrites) and `site.webmanifest`, with long-lived cache headers for immutable assets.
+- **Assets are embeddable, documents are not.** `Cross-Origin-Resource-Policy` is `cross-origin` for
+  the card and the icons — a browser refuses to render a cross-origin `<img>` that says `same-origin`,
+  which breaks every preview panel while the URL still returns 200 — and stays `same-origin` for
+  documents so the app cannot be framed.
 - **Enforced by tests,** not by intention: `tests/unit/metadata.test.ts` asserts tag values, absolute
   URLs, title/description lengths, JSON-LD validity, the real pixel size of every icon, and that the
   sitemap cannot drift from the rewrite list.

@@ -45,6 +45,28 @@ describe('document metadata', () => {
     expect(description!).not.toMatch(/!{2,}|free free/i);
   });
 
+  it('gives search engines a live heading, because the app renders client-side', () => {
+    // Exactly one <h1> in the served HTML, inside #root so React replaces it.
+    const headings = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g)];
+    expect(headings).toHaveLength(1);
+    expect(headings[0]![1].replace(/\s+/g, ' ').trim()).toBe(
+      'EnvCompare — see what your .env is missing',
+    );
+    const rootStart = html.indexOf('<div id="root">');
+    expect(html.indexOf('<h1', rootStart)).toBeGreaterThan(rootStart);
+    // And a readable fallback for the no-JavaScript case, which is the only
+    // reason a static shell is worth having.
+    expect(html).toContain('<noscript>');
+  });
+
+  it('links .ico and .png favicons, not just the SVG Google ignores', () => {
+    const icons = [...html.matchAll(/<link rel="icon"([^>]*)>/g)].map((m) => m[1]!);
+    expect(icons.some((tag) => tag.includes('href="/favicon.ico"'))).toBe(true);
+    expect(icons.some((tag) => tag.includes('sizes="32x32"') && tag.includes('.png'))).toBe(true);
+    expect(icons.some((tag) => tag.includes('sizes="16x16"') && tag.includes('.png'))).toBe(true);
+    expect(icons.some((tag) => tag.includes('image/svg+xml'))).toBe(true);
+  });
+
   it('declares a canonical URL and lets crawlers use large previews', () => {
     expect(attr(/<link rel="canonical" href="([^"]+)"/)).toBe(`${ORIGIN}/`);
     expect(meta('robots')).toBe('index, follow, max-image-preview:large');
@@ -121,6 +143,37 @@ describe('preview image', () => {
   });
 });
 
+describe('favicons', () => {
+  it('ships every icon it advertises, at a size the browser can use', () => {
+    const ico = readFileSync(join(root, 'public/favicon.ico'));
+    // ICONDIR: reserved=0, type=1, count; then one 16-byte entry per image.
+    expect(ico.readUInt16LE(0)).toBe(0);
+    expect(ico.readUInt16LE(2)).toBe(1);
+    const count = ico.readUInt16LE(4);
+    expect(count).toBeGreaterThanOrEqual(3);
+    const sizes = [];
+    for (let index = 0; index < count; index += 1) {
+      const offset = 6 + index * 16;
+      sizes.push([ico.readUInt8(offset) || 256, ico.readUInt8(offset + 1) || 256]);
+    }
+    expect(sizes).toEqual(
+      expect.arrayContaining([
+        [16, 16],
+        [32, 32],
+        [48, 48],
+      ]),
+    );
+    expect(pngSize(join(root, 'public/favicon-16x16.png'))).toMatchObject({
+      width: 16,
+      height: 16,
+    });
+    expect(pngSize(join(root, 'public/favicon-32x32.png'))).toMatchObject({
+      width: 32,
+      height: 32,
+    });
+  });
+});
+
 describe('crawler files', () => {
   it('points robots.txt at the sitemap on the canonical host', () => {
     const robots = readFileSync(join(root, 'public/robots.txt'), 'utf8');
@@ -141,6 +194,26 @@ describe('crawler files', () => {
     for (const location of locations.slice(1)) {
       expect(rewritten).toContain(new URL(location!).pathname);
     }
+  });
+
+  it('lets other sites embed the preview card', () => {
+    // Browsers block a cross-origin <img> when the response says
+    // Cross-Origin-Resource-Policy: same-origin. That is what stopped every
+    // preview panel from rendering the card while the URL itself returned 200.
+    const vercel = JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf8')) as {
+      headers: Array<{ source: string; headers: Array<{ key: string; value: string }> }>;
+    };
+    const ruleFor = (source: string) =>
+      vercel.headers.find((rule) => rule.source === source)?.headers ?? [];
+    const value = (source: string, key: string) =>
+      ruleFor(source).find((header) => header.key === key)?.value;
+
+    expect(value('/og-image.png', 'Cross-Origin-Resource-Policy')).toBe('cross-origin');
+    for (const icon of ['/favicon.ico', '/favicon-32x32.png', '/apple-touch-icon.png']) {
+      expect(value(icon, 'Cross-Origin-Resource-Policy')).toBe('cross-origin');
+    }
+    // Documents stay same-origin: nothing should be able to frame or embed the app.
+    expect(value('/(.*)', 'Cross-Origin-Resource-Policy')).toBe('same-origin');
   });
 
   it('keeps the CSP untouched by the metadata work', () => {
