@@ -191,11 +191,11 @@ const slides = [
       ${headline(['Your .env is', 'missing something.'], { x: PAD, y: 430, size: 84 })}
       ${body('And nothing tells you', { x: PAD, y: 690, size: 40, fill: C.ink })}
       ${body('until the app breaks.', { x: PAD, y: 742, size: 40, fill: C.ink })}
-      ${panel({ x: PAD, y: 830, w: W - PAD * 2, h: 290, label: '.env.example → .env' })}
-      ${row({ x: PAD + 28, y: 868, w: W - PAD * 2 - 56, key: 'DATABASE_URL', chipLabel: 'Match', colour: C.ok, ink: C.okInk })}
-      ${row({ x: PAD + 28, y: 928, w: W - PAD * 2 - 56, key: 'OPENAI_API_KEY', chipLabel: 'Missing', colour: C.missing, ink: C.missingInk })}
-      ${row({ x: PAD + 28, y: 988, w: W - PAD * 2 - 56, key: 'STRIPE_SECRET', chipLabel: 'Placeholder', colour: C.placeholder, ink: C.placeholderInk })}
-      ${row({ x: PAD + 28, y: 1048, w: W - PAD * 2 - 56, key: 'REDIS_URL', chipLabel: 'Different', colour: C.differs, ink: C.differsInk })}
+      ${panel({ x: PAD, y: 830, w: W - PAD * 2, h: 330, label: '.env.example → .env' })}
+      ${row({ x: PAD + 28, y: 908, w: W - PAD * 2 - 56, key: 'DATABASE_URL', chipLabel: 'Match', colour: C.ok, ink: C.okInk })}
+      ${row({ x: PAD + 28, y: 968, w: W - PAD * 2 - 56, key: 'OPENAI_API_KEY', chipLabel: 'Missing', colour: C.missing, ink: C.missingInk })}
+      ${row({ x: PAD + 28, y: 1028, w: W - PAD * 2 - 56, key: 'STRIPE_SECRET', chipLabel: 'Placeholder', colour: C.placeholder, ink: C.placeholderInk })}
+      ${row({ x: PAD + 28, y: 1088, w: W - PAD * 2 - 56, key: 'REDIS_URL', chipLabel: 'Different', colour: C.differs, ink: C.differsInk })}
       ${dots({ x: PAD, y: 1210, total: 10, active: 1 })}
       ${footer(W, H)}`,
   },
