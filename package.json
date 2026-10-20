@@ -13,6 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "privacy": "node scripts/check-privacy.mjs",
+    "social": "node scripts/build-social.mjs",
+    "social:png": "python3 scripts/render-social.py",
     "check": "npm run test && npm run build && npm run privacy",
     "test:e2e": "playwright test"
   },

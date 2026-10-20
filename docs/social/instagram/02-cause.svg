@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity="0.028" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="glow" cx="0.12" cy="0.02" r="0.8">
+      <stop offset="0" stop-color="#2c46c8" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#2c46c8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="1350" fill="#101215"/>
+  <rect width="1080" height="1350" fill="url(#grid)"/>
+  <rect width="1080" height="1350" fill="url(#glow)"/><g transform="translate(96 90)">
+    <rect width="46.00" height="46.00" rx="10.06" fill="#15181c" stroke="rgba(255,255,255,0.09)"/>
+    <rect x="8.63" y="10.06" width="7.19" height="25.88" rx="2.16" fill="#f6f6f3"/>
+    <rect x="30.19" y="10.06" width="7.19" height="9.34" rx="2.16" fill="#f6f6f3" fill-opacity="0.55"/>
+    <rect x="30.19" y="26.59" width="7.19" height="9.34" rx="2.16" fill="#f6f6f3" fill-opacity="0.55"/>
+  </g>
+  <text x="158" y="121" fill="#f6f6f3"
+        font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="-0.2">EnvCompare</text>
+  <text x="984" y="121" fill="#6b7280" text-anchor="end"
+        font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="20">02 / 10</text>
+      <text x="96" y="400.0" fill="#f6f6f3"
+        font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="84" font-weight="700" letter-spacing="-2.4">AI agents won’t</text>
+  <text x="96" y="494.1" fill="#f6f6f3"
+        font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="84" font-weight="700" letter-spacing="-2.4">touch your .env.</text>
+      <text x="96" y="600" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="33"
+    >They are told not to. So they write</text>
+      <text x="96" y="646" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="33"
+    >.env.example and hand you the keys.</text>
+      <g>
+    <rect x="96" y="760" width="430" height="230" rx="18" fill="#171a1f" stroke="rgba(255,255,255,0.09)"/>
+    
+  </g>
+      <text x="122" y="804" fill="#f6f6f3" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="23">.env.example</text>
+      <text x="122" y="850" fill="#6b7280" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="20">written by the agent</text>
+      <text x="122" y="900" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="18">OPENAI_API_KEY=</text>
+      <text x="122" y="930" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="18">DATABASE_URL=</text>
+      <text x="122" y="960" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="18">STRIPE_SECRET=</text>
+      <g>
+    <rect x="554" y="760" width="430" height="230" rx="18" fill="#171a1f" stroke="rgba(255,255,255,0.09)"/>
+    
+  </g>
+      <text x="580" y="804" fill="#f6f6f3" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="23">.env</text>
+      <text x="580" y="850" fill="#6b7280" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="20">filled in by you, by hand</text>
+      <text x="580" y="900" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="18">OPENAI_API_KEY=sk-…</text>
+      <text x="580" y="930" fill="#cfd6e2" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="17">DATABASE_URL=postgres</text>
+      <text x="580" y="960" fill="#6b7280" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="18">—</text>
+      <text x="540" y="1050" fill="#6b7280" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="22"
+    text-anchor="middle">two files, one truth</text>
+      <circle cx="96" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="118" cy="1210" r="6" fill="#f6f6f3"/><circle cx="140" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="162" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="184" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="206" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="228" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="250" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="272" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="294" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/>
+      <text x="96" y="1282" fill="#6b7280" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="21">envcompare.vercel.app</text></svg>

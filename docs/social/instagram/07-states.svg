@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity="0.028" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="glow" cx="0.12" cy="0.02" r="0.8">
+      <stop offset="0" stop-color="#2c46c8" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#2c46c8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="1350" fill="#101215"/>
+  <rect width="1080" height="1350" fill="url(#grid)"/>
+  <rect width="1080" height="1350" fill="url(#glow)"/><g transform="translate(96 90)">
+    <rect width="46.00" height="46.00" rx="10.06" fill="#15181c" stroke="rgba(255,255,255,0.09)"/>
+    <rect x="8.63" y="10.06" width="7.19" height="25.88" rx="2.16" fill="#f6f6f3"/>
+    <rect x="30.19" y="10.06" width="7.19" height="9.34" rx="2.16" fill="#f6f6f3" fill-opacity="0.55"/>
+    <rect x="30.19" y="26.59" width="7.19" height="9.34" rx="2.16" fill="#f6f6f3" fill-opacity="0.55"/>
+  </g>
+  <text x="158" y="121" fill="#f6f6f3"
+        font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="-0.2">EnvCompare</text>
+  <text x="984" y="121" fill="#6b7280" text-anchor="end"
+        font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="20">07 / 10</text>
+      <text x="96" y="390.0" fill="#f6f6f3"
+        font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="88" font-weight="700" letter-spacing="-2.5">Six states.</text>
+  <text x="96" y="488.6" fill="#f6f6f3"
+        font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="88" font-weight="700" letter-spacing="-2.5">Not two.</text>
+      <text x="96" y="556" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="30"
+    >“Present” hides four different problems.</text>
+      <g>
+            <rect x="96" y="624" width="888" height="76" rx="10" fill="#c0392f" fill-opacity="0.10"
+                  stroke="#c0392f" stroke-opacity="0.4"/>
+            <circle cx="136" cy="662" r="9" fill="#c0392f"/>
+            <text x="164" y="670" fill="#e88c84" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="26" font-weight="600">Missing</text>
+            <text x="396" y="670" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="24">the key is not in the file</text>
+          </g><g>
+            <rect x="96" y="716" width="888" height="76" rx="10" fill="#9a5b00" fill-opacity="0.10"
+                  stroke="#9a5b00" stroke-opacity="0.4"/>
+            <circle cx="136" cy="754" r="9" fill="#9a5b00"/>
+            <text x="164" y="762" fill="#dda85a" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="26" font-weight="600">Empty</text>
+            <text x="396" y="762" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="24">the key is there, the value is not</text>
+          </g><g>
+            <rect x="96" y="808" width="888" height="76" rx="10" fill="#6b4fa1" fill-opacity="0.10"
+                  stroke="#6b4fa1" stroke-opacity="0.4"/>
+            <circle cx="136" cy="846" r="9" fill="#6b4fa1"/>
+            <text x="164" y="854" fill="#b4a0dd" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="26" font-weight="600">Placeholder</text>
+            <text x="396" y="854" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="24">still changeme, still your-api-key</text>
+          </g><g>
+            <rect x="96" y="900" width="888" height="76" rx="10" fill="#666b72" fill-opacity="0.10"
+                  stroke="#666b72" stroke-opacity="0.4"/>
+            <circle cx="136" cy="938" r="9" fill="#666b72"/>
+            <text x="164" y="946" fill="#9aa0a8" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="26" font-weight="600">Commented</text>
+            <text x="396" y="946" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="24">present, but switched off with #</text>
+          </g><g>
+            <rect x="96" y="992" width="888" height="76" rx="10" fill="#1f6f8b" fill-opacity="0.10"
+                  stroke="#1f6f8b" stroke-opacity="0.4"/>
+            <circle cx="136" cy="1030" r="9" fill="#1f6f8b"/>
+            <text x="164" y="1038" fill="#7fc0d3" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="26" font-weight="600">Different</text>
+            <text x="396" y="1038" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="24">set in both, and they disagree</text>
+          </g><g>
+            <rect x="96" y="1084" width="888" height="76" rx="10" fill="#2f6b4f" fill-opacity="0.10"
+                  stroke="#2f6b4f" stroke-opacity="0.4"/>
+            <circle cx="136" cy="1122" r="9" fill="#2f6b4f"/>
+            <text x="164" y="1130" fill="#7fc39f" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="26" font-weight="600">Set</text>
+            <text x="396" y="1130" fill="#a7aebb" font-family="DejaVu Sans, Verdana, Helvetica, Arial, sans-serif" font-size="24">actually configured, actually working</text>
+          </g>
+      <circle cx="96" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="118" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="140" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="162" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="184" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="206" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="228" cy="1210" r="6" fill="#f6f6f3"/><circle cx="250" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="272" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/><circle cx="294" cy="1210" r="5" fill="rgba(246,246,243,0.22)"/>
+      <text x="96" y="1282" fill="#6b7280" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="21">envcompare.vercel.app</text></svg>

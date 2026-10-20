@@ -78,6 +78,8 @@ Requires **Node 22+**. No API keys, no database, no services.
 | `npm run test:e2e` | Playwright suite (run `npx playwright install` first) |
 | `npm run check` | Tests, build and guard — what CI runs |
 | `node scripts/build-badges.mjs` | Regenerate the badges in `docs/assets/badges` |
+| `npm run social` | Regenerate the launch cards in `docs/social` (SVG, edit the copy here) |
+| `npm run social:png` | Render those SVGs to uploadable PNGs (needs `pip install resvg-py`) |
 
 ## How the guarantees are enforced
 
@@ -128,9 +130,10 @@ docs/PRD.md           the specification, written before the code
 docs/DESIGN.md        palette, type, layout, motion, copy
 docs/PRIVACY.md       the long version of the privacy claim
 docs/assets/          banner and generated README badges
+docs/social/          launch images and the captions that go with them
 e2e/                  Playwright: no-network, no-storage, masked-DOM, hostile-storage
 tests/                unit and component tests, plus parser fixtures
-scripts/              privacy guard, badge generator
+scripts/              privacy guard, badge and social-card generators
 AGENTS.md             conventions for humans and AI agents
 PROGRESS.md           build log and the decisions behind it
 ```
@@ -138,7 +141,7 @@ PROGRESS.md           build log and the decisions behind it
 ## Testing
 
 ```bash
-npm test           # 389 unit and component tests
+npm test           # 395 unit and component tests
 npm run check      # + typecheck, production build, privacy guard
 npm run test:e2e   # Playwright, against a production build
 ```
