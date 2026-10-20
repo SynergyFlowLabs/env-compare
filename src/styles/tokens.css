@@ -1,0 +1,78 @@
+/* Design tokens. See docs/DESIGN.md for the reasoning and palette table. */
+
+:root {
+  color-scheme: light dark;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'JetBrains Mono', Menlo, Consolas,
+    'Liberation Mono', monospace;
+
+  --paper: #f6f6f3;
+  --surface: #ffffff;
+  --surface-sunken: #efefe9;
+  --ink: #15181c;
+  --ink-soft: #5a616b;
+  --ink-faint: #878d96;
+  --line: #d7d8d2;
+  --line-strong: #b9bab3;
+  --accent: #2c46c8;
+  --accent-ink: #1d2f96;
+  --accent-tint: #eaedfb;
+  --focus: #2c46c8;
+
+  --st-missing: #c0392f;
+  --st-missing-tint: #fdeeec;
+  --st-empty: #9a5b00;
+  --st-empty-tint: #fdf3e3;
+  --st-placeholder: #6b4fa1;
+  --st-placeholder-tint: #f4f0fb;
+  --st-commented: #6a6f76;
+  --st-commented-tint: #f1f1ef;
+  --st-ok: #2f6b4f;
+  --st-ok-tint: #eaf4ee;
+  --st-differs: #1f6f8b;
+  --st-differs-tint: #e9f4f7;
+
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+
+  --shadow-panel: 0 1px 0 rgb(21 24 28 / 4%);
+  --max-width: 1180px;
+
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --speed: 140ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #101215;
+    --surface: #171a1f;
+    --surface-sunken: #1c2026;
+    --ink: #e8e9e6;
+    --ink-soft: #a0a6af;
+    --ink-faint: #767d87;
+    --line: #2a2e35;
+    --line-strong: #3a404a;
+    --accent: #7d93ff;
+    --accent-ink: #a9b8ff;
+    --accent-tint: #1b2140;
+    --focus: #7d93ff;
+
+    --st-missing: #ff8a7a;
+    --st-missing-tint: #2a1a18;
+    --st-empty: #f3b95f;
+    --st-empty-tint: #2a2114;
+    --st-placeholder: #c3a6ff;
+    --st-placeholder-tint: #221b31;
+    --st-commented: #9aa0a8;
+    --st-commented-tint: #1f2227;
+    --st-ok: #6fd3a0;
+    --st-ok-tint: #15241c;
+    --st-differs: #7dd3e8;
+    --st-differs-tint: #14242a;
+
+    --shadow-panel: 0 1px 0 rgb(0 0 0 / 40%);
+  }
+}
