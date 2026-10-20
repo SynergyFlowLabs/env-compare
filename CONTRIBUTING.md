@@ -25,6 +25,7 @@ The product is only useful because people paste **real secrets** into it. These 
 4. No file content in a URL, a hash, or a share link.
 5. Masked values must not exist in the DOM while masked.
 6. Fix blocks, reports (default redaction) and agent prompts must never contain a value. Tests assert this with real-looking strings.
+7. No inline executable `<script>` and no third-party `<script src>` in the built HTML. A single `<script type="application/ld+json">` data block is allowed for structured data; the guard rejects it if it does not parse as JSON, so it cannot be used to smuggle code. `<link rel="canonical">` is the only external `<link>` permitted, because metadata is not a request.
 
 A PR that relaxes any of these will be declined, whatever else it improves.
 

@@ -1,0 +1,5 @@
+# EnvCompare is a single static page plus two rendered routes.
+User-agent: *
+Allow: /
+
+Sitemap: https://envcompare.vercel.app/sitemap.xml
