@@ -354,6 +354,10 @@ on the card and the icons. The deploy was green; the header was unchanged.
   `same-origin` on documents.
 - A test now asserts the **ordering**, not just the values — ordering is what silently broke it.
 
+Deployed: `dpl_Cpj1CR6EwXRhwkZfdacbZxSrYmU2`, READY and PROMOTED on `envcompare.vercel.app`.
+Verified against the live site: `/og-image.png?v=1` returns `Cross-Origin-Resource-Policy: cross-origin`,
+`Cache-Control: public, max-age=3600, s-maxage=3600`, 366 010 bytes, `image/png`.
+
 Second lesson, same bug: the edge had cached the pre-fix response for the bare card URL with
 `s-maxage=604800`, so even a correct header would have taken a week to reach a scraper. Assets now
 cache for an hour (`max-age=3600, s-maxage=3600`), and the card is referenced as
