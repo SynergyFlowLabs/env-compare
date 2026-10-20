@@ -83,7 +83,10 @@ describe('document metadata', () => {
   });
 
   it('points the card at an absolute https image with its real dimensions', () => {
-    expect(meta('og:image')).toBe(`${ORIGIN}/og-image.png`);
+    // A version query is deliberate: the edge held a pre-fix response for the
+    // bare URL (s-maxage was a week), and every scraper caches by full URL.
+    expect(meta('og:image')).toBe(`${ORIGIN}/og-image.png?v=1`);
+    expect(meta('twitter:image')).toBe(meta('og:image'));
     expect(meta('og:image:type')).toBe('image/png');
     expect(meta('og:image:width')).toBe('1200');
     expect(meta('og:image:height')).toBe('630');
@@ -194,6 +197,16 @@ describe('crawler files', () => {
     for (const location of locations.slice(1)) {
       expect(rewritten).toContain(new URL(location!).pathname);
     }
+  });
+
+  it('keeps asset cache lifetimes short enough to correct a mistake', () => {
+    const vercel = JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf8')) as {
+      headers: Array<{ source: string; headers: Array<{ key: string; value: string }> }>;
+    };
+    const rule = vercel.headers.find((entry) => entry.source === '/og-image.png');
+    const value = rule?.headers.find((header) => header.key === 'Cache-Control')?.value ?? '';
+    expect(value).toContain('s-maxage=3600');
+    expect(value).not.toContain('s-maxage=604800');
   });
 
   it('lets other sites embed the preview card', () => {

@@ -342,6 +342,24 @@ Two smaller scoring fixes from the same report:
 
 **382 tests**, typecheck, build and guard green.
 
+### 2026-10-21 — The second half of the CORP bug
+
+The first fix looked right and did nothing, for a reason worth writing down: **Vercel merges every
+matching header rule, and for a repeated key the last value wins.** The catch-all `/(.*)` rule sat at
+the end of the array, so its `Cross-Origin-Resource-Policy: same-origin` overwrote the `cross-origin`
+on the card and the icons. The deploy was green; the header was unchanged.
+
+- The catch-all now comes first, assets after it. Verified against the live site:
+  `Cross-Origin-Resource-Policy: cross-origin` on `/og-image.png` and `/favicon.ico`,
+  `same-origin` on documents.
+- A test now asserts the **ordering**, not just the values — ordering is what silently broke it.
+
+Second lesson, same bug: the edge had cached the pre-fix response for the bare card URL with
+`s-maxage=604800`, so even a correct header would have taken a week to reach a scraper. Assets now
+cache for an hour (`max-age=3600, s-maxage=3600`), and the card is referenced as
+`og-image.png?v=1` — a new cache key for every scraper, and a version to bump whenever the image
+changes.
+
 ## Decisions made during implementation
 
 | Date | Decision | Why |
