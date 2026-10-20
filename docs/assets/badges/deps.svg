@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="116" height="20" viewBox="0 0 116 20" role="img" aria-label="runtime deps: 9">
+  <title>runtime deps: 9</title>
+  <rect width="116" height="20" rx="4" fill="#2a2f38"/>
+  <rect x="92" width="24" height="20" rx="4" fill="#6b4fa1"/>
+  <rect x="92" width="6" height="20" fill="#6b4fa1"/>
+  <text x="46" y="14" fill="#f6f6f3" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11" font-weight="600" textLength="74" lengthAdjust="spacingAndGlyphs" text-anchor="middle">runtime deps</text>
+  <text x="104" y="14" fill="#f6f6f3" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11" font-weight="600" textLength="6" lengthAdjust="spacingAndGlyphs" text-anchor="middle">9</text>
+</svg>
