@@ -82,7 +82,17 @@ export function parseEnvFile(fileId: string, text: string): ParsedFile {
     const keyRaw = match[1];
     if (!indices || !keyRange || !keyRaw) break; // defensive; the grammar requires a key
 
-    const rawValue = valueRange ? text.slice(valueRange[0], valueRange[1]) : '';
+    // Unquoted values keep their trailing spaces in the grammar's match, but the
+    // *value* ends at the last non-space character. Editing the span must not
+    // swallow the gap before a trailing comment.
+    let valueStart = valueRange ? valueRange[0] : separatorEnd(text, keyRange[1]);
+    let valueEnd = valueRange ? valueRange[1] : valueStart;
+    if (valueRange && detectQuote(text.slice(valueRange[0], valueRange[1])) === 'none') {
+      while (valueEnd > valueStart && /\s/.test(text[valueEnd - 1] ?? '')) valueEnd -= 1;
+      while (valueStart < valueEnd && /\s/.test(text[valueStart] ?? '')) valueStart += 1;
+    }
+
+    const rawValue = text.slice(valueStart, valueEnd);
     const value = normalizeValue(rawValue);
     const quote = detectQuote(rawValue);
 
@@ -135,9 +145,7 @@ export function parseEnvFile(fileId: string, text: string): ParsedFile {
       line: startLine,
       endLine,
       span: { start: spanStart, end: spanEnd },
-      valueSpan: valueRange
-        ? { start: valueRange[0], end: valueRange[1] }
-        : { start: keyRange[1], end: keyRange[1] },
+      valueSpan: { start: valueStart, end: valueEnd },
       keySpan: { start: keyRange[0], end: keyRange[1] },
       ...(trailingComment ? { trailingComment } : {}),
       refs: extractRefs(value),
@@ -277,6 +285,15 @@ function findUncoveredLines(
   for (const line of lines) {
     if (!skip.has(line.number)) visit(line);
   }
+}
+
+/** Offset just past the `=` / `:` separator and any following spaces. */
+function separatorEnd(text: string, from: number): number {
+  let i = from;
+  while (i < text.length && /\s/.test(text[i] ?? '')) i += 1;
+  if (text[i] === '=' || text[i] === ':') i += 1;
+  while (i < text.length && (text[i] === ' ' || text[i] === '\t')) i += 1;
+  return i;
 }
 
 function stripBom(text: string): string {

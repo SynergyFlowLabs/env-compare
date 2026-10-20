@@ -15,8 +15,8 @@ Implementation tracker for EnvCompare. The plan comes from [docs/PRD.md](docs/PR
 | 2 | Parser fixture corpus + conformance tests against real `dotenv` | §16.2 | ✅ done |
 | 3 | Compare engine: key universe, six states, severity, summary, ordering | §9, §12.5 | ✅ done |
 | 4 | Placeholder + secret heuristics | §12.9, §12.10 | ✅ done |
-| 5 | Surgical patch engine (edit / add / remove / uncomment) + undo | §12.13 | ⬜ |
-| 6 | Exporters: fix block, redacted report, agent prompt | §8.3 | ⬜ |
+| 5 | Surgical patch engine (edit / add / remove / uncomment) + undo | §12.13 | ✅ done |
+| 6 | Exporters: fix block, redacted report, agent prompt | §8.3 | ✅ done |
 | 7 | UI: input state, sample data, role detection, swap, clear | §10.2 | ⬜ |
 | 8 | UI: summary + table (aligned, ghost cells, filters, states) | §10.3 | ⬜ |
 | 9 | UI: raw view, fix panel, report panel, masking | §10.3, §13.6 | ⬜ |
@@ -71,6 +71,24 @@ Three problems surfaced while writing the tests — all fixed:
 2. **Severity ties resolved arbitrarily.** With one target missing a key and another having it empty, both are `error` but the *fix* differs (add vs fill). Rows now tie-break by bucket priority (`missing` > `needsValue` > …) so the report names the most actionable problem.
 3. **The PRD's Appendix A contradicted Appendix B.** Appendix A called a real JWT replacing `your-anon-key` a "difference"; Appendix B correctly treats a placeholder-that-got-filled as **matching**. Appendix B is right — flagging every correctly filled row as "different" is noise — so the PRD was corrected, not the code.
 
+### 2026-10-20 — Steps 5–6: patch engine + exporters
+
+Built `src/core/patch/` and `src/core/export/`:
+
+- `applyPatch.ts` — four patch kinds: `replaceValue`, `insertKey`, `removeKey`, `uncomment`. Every edit is a splice against the original text, so comments, blank lines, ordering, quoting and line endings survive. `renderValue` picks a quote style the content cannot collide with, because dotenv does *not* unescape `\\`, `\'` or `\"` — escaping is the last resort and it emits a note when it happens.
+- `fixBlock.ts` — the paste-ready block. Always blank values; skips keys the reference only documents as comments.
+- `report.ts` — Markdown report with three redaction levels (`keys` default, `masked`, `full`), problem rows only, plus a "N others match" line and parse notes.
+- `prompt.ts` — keys-only instruction for the AI agent that wrote the example.
+
+**270 tests green.** Two more real bugs, both in the parser's span data:
+
+1. **`KEY=` pointed its empty value span at the wrong offset.** With no value, `valueSpan` used the end of the *key*, so editing `A=` produced `Afilled=`. The span now starts just past the `=`/`:` separator and any spaces.
+2. **Unquoted values swallowed the gap before a trailing comment.** The grammar's value group includes trailing spaces, so `A=old # note` had a span covering `"old "` and an edit produced `A=new# note`. Unquoted value spans are now trimmed; quoted spans are untouched, since spaces there are content.
+
+Both were caught by round-trip tests (`replaceValue` → re-parse → expect the new value), which is the check that matters: the table must never corrupt a file.
+
+Also worth noting for reviewers: the fix block, report and prompt each have a test asserting that **no value substring from either file appears in the output**. That is the privacy promise expressed as an executable check.
+
 ---
 
 ## Decisions made during implementation
@@ -85,6 +103,8 @@ Three problems surfaced while writing the tests — all fixed:
 | 2026-10-20 | `dotenv` stays a devDependency; grammar is vendored into `src/core` | Keeps the browser bundle free of Node shims while conformance keeps us honest |
 | 2026-10-20 | Filling a placeholder counts as `matching`, not `different` | A user who did the right thing must not see a flag on their row |
 | 2026-10-20 | Secret detection only ever *adds* masking/warnings | A detector that hides or rewrites data would be a new failure mode |
+| 2026-10-20 | The report lists problem rows only, not every row | A 500-row report gets skimmed; a 9-row one gets read |
+| 2026-10-20 | `insertKey` appends at the end of the file | Anything smarter means guessing where the user wants it; the table offers Undo instead |
 
 ---
 
@@ -93,7 +113,7 @@ Three problems surfaced while writing the tests — all fixed:
 | Check | Command | Result |
 | --- | --- | --- |
 | Types | `npx tsc -p tsconfig.json` | ✅ clean |
-| Unit tests | `npm test` | ✅ 226 passed (6 files) |
+| Unit tests | `npm test` | ✅ 270 passed (8 files) |
 | dotenv conformance | `npm test` | ✅ 32 fixtures × 2 assertions |
 | Build | `npx vite build` | ✅ 68.6 kB gzip |
 | Privacy guard | `npm run privacy` | ⬜ not implemented yet |
@@ -102,4 +122,4 @@ Three problems surfaced while writing the tests — all fixed:
 
 ## Next step
 
-**Step 5 — patch engine.** Surgical text edits (`replaceValue`, `insertKey`, `removeKey`, `uncomment`) that preserve quoting, comments, ordering and line endings, plus the in-memory undo stack from PRD §12.13.
+**Step 7 — UI: input state.** Two panes with editable filenames, drag-drop, sample data, reference detection and swap, live counts, and the reducer that wires the core to React.
