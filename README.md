@@ -141,7 +141,7 @@ PROGRESS.md           build log and the decisions behind it
 ## Testing
 
 ```bash
-npm test           # 395 unit and component tests
+npm test           # 402 unit and component tests
 npm run check      # + typecheck, production build, privacy guard
 npm run test:e2e   # Playwright, against a production build
 ```

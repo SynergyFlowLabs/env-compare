@@ -446,6 +446,45 @@ Test count moved 389 → 395, so the badge generator and the README were updated
 Badges are generated, but the *number* in them is a claim, and a claim that is not regenerated is
 drift.
 
+### 2026-10-21 — Raw panes scroll together (#9)
+
+The Raw view is the trust anchor: it shows each file exactly as pasted, so a reader can check the
+analysis against the text. But its panes scrolled independently, which quietly defeated the point —
+comparing two files means looking across the gutter, and every glance landed on a different region
+until you steered both scrollers by hand.
+
+`RawView` now keeps a ref to every pane and mirrors scroll **proportionally**, not in absolute pixels:
+
+```
+ratio      = source.scrollTop / (source.scrollHeight - source.clientHeight)
+target.top = ratio * (target.scrollHeight - target.clientHeight)
+```
+
+Proportional rather than line-for-line because the files are not the same length — that is usually why
+you are comparing them. Equal fractions keep the eye at the same relative place, which is what a
+side-by-side read actually compares; aligning line 40 of a 60-line file to line 40 of a 400-line file
+would drift off the end of the shorter one.
+
+Three details that are the difference between "syncs" and "usable":
+
+- **The echo guard.** Writing `scrollTop` fires a scroll event on the pane we just moved. Treating that
+  as the reader scrolling makes the panes chase each other frame after frame. Each pane records the
+  value we last wrote to it, and an event within 1px of that value is our own echo, not an input.
+- **Panes that fit are skipped.** A 6-line file has nothing to scroll; syncing it to 0 would drag the
+  other panes to the top every time the pointer crossed it.
+- **A toggle, as the PRD asked.** US-14 specifies a *toggleable* "sync scroll". It is a real toggle
+  button (`aria-pressed`), on by default, hidden when there is only one file to show.
+
+Two smaller things while in the file: each pane is now `tabIndex={0}` and focus-visible ringed, because
+a scrollable region that cannot be focused cannot be scrolled without a mouse; and each `<section>`
+carries the file name as its accessible name, so the panes are landmarks rather than anonymous boxes.
+
+Verified by `tests/component/raw-view.test.tsx` (7 tests): proportional mirroring across panes of
+different lengths, every pane following (not just the second), the echo guard, sync off, a source pane
+with no overflow, keyboard reachability, and the pane labels. jsdom has no layout, so the tests stub
+`scrollHeight`/`clientHeight` — the sync is arithmetic on those numbers, and pinning the arithmetic is
+what makes the behaviour testable without a browser.
+
 ## Decisions made during implementation
 
 | Date | Decision | Why |
@@ -475,6 +514,8 @@ drift.
 | 2026-10-20 | Consent is asked at the action, not on load | A banner on load is the pattern the design brief rules out; a question at the moment of the action can explain itself and "no" costs nothing |
 | 2026-10-20 | The agent prompt opens a dialog as well as copying | The prompt is the one export that leaves the tab (pasted into an agent); the reader should see it, and a blocked clipboard needs somewhere to fall back to |
 | 2026-10-20 | Auto-advance is a state flag, not a derived condition | "Both files have keys" is not the same as "the reader wants the results"; conflating them made the editor unusable |
+| 2026-10-21 | Raw panes sync by scroll fraction, not by line number | The two files are different lengths — that is why they are being compared — so equal fractions keep the reader in the same relative place, where equal line numbers run off the shorter file |
+| 2026-10-21 | Scroll sync is on by default, with a visible toggle | Synced is the reason the raw view exists side by side; the toggle is for the case where one file needs reading on its own, and hiding it would make a stuck pane look like a bug |
 | 2026-10-21 | Social images are generated SVG with a separate raster step, not drawn PNGs | The copy is the part that will change; text in a diff is reviewable, and resvg is the only build-time dependency and it never ships |
 | 2026-10-21 | Instagram is 4:5, not 1:1 | The tallest a feed allows — two extra lines of headline before anyone taps |
 | 2026-10-21 | The LinkedIn card is square and the X card is 16:9 | LinkedIn crops anything wider than ~1.91:1; X shows `summary_large_image` uncropped on mobile |
@@ -487,7 +528,7 @@ drift.
 | Check | Command | Result |
 | --- | --- | --- |
 | Types | `npx tsc -p tsconfig.json` | ✅ clean |
-| Unit + component tests | `npm test` | ✅ 395 passed (21 files) |
+| Unit + component tests | `npm test` | ✅ 402 passed (22 files) |
 | dotenv conformance | `npm test` | ✅ 32 fixtures × 2 assertions |
 | Build | `npm run build` | ✅ 444 kB on disk, 5 files |
 | Privacy guard | `npm run privacy` | ✅ green |

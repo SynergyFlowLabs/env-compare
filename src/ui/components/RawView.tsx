@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
-import { CircleMinus } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { CircleMinus, Link2, Unlink2 } from 'lucide-react';
 import type { Comparison, Presence } from '../../core/compare';
 import type { ParsedFile, SourceLine } from '../../core/types';
 import { splitLines } from '../../core/parse';
+import { Button } from './ui/button';
 import { cn } from '../lib/utils';
 
 interface RawViewProps {
@@ -28,29 +29,97 @@ const LINE_TONE: Record<Presence, string> = {
  * The raw view is the trust anchor: it shows the file exactly as pasted, with
  * annotations layered on top and never rewriting the text (PRD US-14).
  *
+ * The panes scroll together (#9). Comparing two files side by side is only
+ * useful if a glance across the gutter lands on the same region, and with
+ * independent scrollers the reader has to steer both to do it. Sync is
+ * proportional — `scrollTop / (scrollHeight - clientHeight)` — because the
+ * files rarely have the same number of lines: equal fractions keep the eye at
+ * the same *relative* place, which is what a side-by-side read compares.
+ *
  * A missing key gets a marker line placed after the nearest preceding key that
  * the file *does* have — where a reader would look for it. The marker is
  * synthetic UI, never content: it cannot be copied into the file.
  */
 export function RawView({ comparison, texts, parsed, maskValues }: RawViewProps) {
+  const [synced, setSynced] = useState(true);
+  const panes = useRef(new Map<string, HTMLElement>());
+  /** Where this component last put each pane, so our own writes are not mistaken for the reader. */
+  const applied = useRef(new Map<string, number>());
+
+  const registerPane = (fileId: string) => (node: HTMLElement | null) => {
+    if (node) panes.current.set(fileId, node);
+    else panes.current.delete(fileId);
+    applied.current.delete(fileId);
+  };
+
+  const mirror = (sourceId: string) => {
+    if (!synced) return;
+    const source = panes.current.get(sourceId);
+    if (!source) return;
+
+    // A scroll event that matches what we just wrote is the echo of our own
+    // sync, not the reader scrolling. Dropping it is what stops the panes from
+    // chasing each other frame after frame.
+    const echo = applied.current.get(sourceId);
+    if (echo !== undefined && Math.abs(source.scrollTop - echo) <= 1) return;
+
+    const span = source.scrollHeight - source.clientHeight;
+    const ratio = span > 0 ? source.scrollTop / span : 0;
+
+    for (const [id, pane] of panes.current) {
+      if (id === sourceId) continue;
+      const ownSpan = pane.scrollHeight - pane.clientHeight;
+      if (ownSpan <= 0) continue;
+      const next = Math.round(ratio * ownSpan);
+      applied.current.set(id, next);
+      if (Math.abs(pane.scrollTop - next) > 0) pane.scrollTop = next;
+    }
+  };
+
+  const multiple = comparison.perFile.length > 1;
+
   return (
-    <div
-      className={cn(
-        'grid gap-4',
-        comparison.perFile.length > 2 ? 'lg:grid-cols-2 2xl:grid-cols-3' : 'lg:grid-cols-2',
-      )}
-    >
-      {comparison.perFile.map((file) => (
-        <RawPane
-          key={file.fileId}
-          comparison={comparison}
-          fileId={file.fileId}
-          name={file.name}
-          text={texts.get(file.fileId) ?? ''}
-          parsed={parsed.get(file.fileId)}
-          maskValues={maskValues}
-        />
-      ))}
+    <div className="grid gap-2">
+      {multiple ? (
+        <div className="flex items-center gap-2">
+          <span className="text-[12px] text-faint">Raw text as pasted — annotations only.</span>
+          <span className="flex-1" />
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-pressed={synced}
+            onClick={() => setSynced((value) => !value)}
+            title={
+              synced
+                ? 'Scroll the files independently'
+                : 'Scroll all files together again'
+            }
+          >
+            {synced ? <Link2 aria-hidden="true" /> : <Unlink2 aria-hidden="true" />}
+            Scroll together
+          </Button>
+        </div>
+      ) : null}
+      <div
+        className={cn(
+          'grid gap-4',
+          comparison.perFile.length > 2 ? 'lg:grid-cols-2 2xl:grid-cols-3' : 'lg:grid-cols-2',
+        )}
+      >
+        {comparison.perFile.map((file) => (
+          <RawPane
+            key={file.fileId}
+            comparison={comparison}
+            fileId={file.fileId}
+            name={file.name}
+            text={texts.get(file.fileId) ?? ''}
+            parsed={parsed.get(file.fileId)}
+            maskValues={maskValues}
+            registerPane={registerPane(file.fileId)}
+            onScroll={() => mirror(file.fileId)}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -62,6 +131,8 @@ function RawPane({
   text,
   parsed,
   maskValues,
+  registerPane,
+  onScroll,
 }: {
   comparison: Comparison;
   fileId: string;
@@ -69,6 +140,8 @@ function RawPane({
   text: string;
   parsed?: ParsedFile;
   maskValues: boolean;
+  registerPane: (node: HTMLElement | null) => void;
+  onScroll: () => void;
 }) {
   const rendered = useMemo(
     () => buildRendered(splitLines(text), comparison, fileId, parsed),
@@ -76,12 +149,19 @@ function RawPane({
   );
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-lg border border-border bg-card">
+    <section aria-label={name} className="min-w-0 overflow-hidden rounded-lg border border-border bg-card">
       <div className="flex items-center gap-2 border-b border-border px-3 py-2">
         <span className="mono truncate text-[13px] font-medium">{name}</span>
         <span className="ml-auto text-[11px] text-faint">read-only</span>
       </div>
-      <div className="max-h-[560px] overflow-auto py-1.5 scroll-quiet">
+      {/* Focusable so the region can be scrolled from the keyboard, not only the wheel. */}
+      <div
+        ref={registerPane}
+        onScroll={onScroll}
+        tabIndex={0}
+        data-file-id={fileId}
+        className="max-h-[560px] overflow-auto py-1.5 scroll-quiet focus-visible:ring-[3px] focus-visible:ring-ring/35 focus-visible:outline-none"
+      >
         {rendered.map((item, index) =>
           item.kind === 'marker' ? (
             <div
