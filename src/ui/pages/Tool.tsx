@@ -6,6 +6,7 @@ import { countLines } from '../../core/parse';
 import { reducer, initialState } from '../../state/reducer';
 import { copyText, downloadText, safeFileName } from '../lib/clipboard';
 import { FilePane } from '../components/FilePane';
+import { SkipLink } from '../components/SkipLink';
 import { SummaryLine } from '../components/SummaryLine';
 import { CompareTable, type Filter } from '../components/CompareTable';
 import { RawView } from '../components/RawView';
@@ -106,9 +107,10 @@ export function Tool() {
 
   return (
     <div className="shell">
+      <SkipLink />
       <Header />
 
-      <main className="shell__main">
+      <main className="shell__main" id="main" tabIndex={-1}>
         {state.view === 'input' || !bothHaveKeys ? (
           <section className="landing" aria-labelledby="landing-title">
             <h1 className="landing__title" id="landing-title">

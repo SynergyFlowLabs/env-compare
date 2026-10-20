@@ -1207,3 +1207,28 @@ table.compare {
     forced-color-adjust: none;
   }
 }
+
+/* ---------- skip link ---------- */
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -100px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 120ms ease;
+}
+
+.skip-link:focus-visible {
+  top: 12px;
+  color: var(--paper);
+}
+
+.shell__main:focus {
+  outline: none;
+}

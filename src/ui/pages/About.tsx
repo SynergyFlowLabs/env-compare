@@ -1,8 +1,10 @@
 import { Wordmark } from '../components/Brand';
+import { SkipLink } from '../components/SkipLink';
 
 export function About() {
   return (
     <div className="shell">
+      <SkipLink />
       <header className="header">
         <div className="header__inner">
           <Wordmark />
@@ -14,7 +16,7 @@ export function About() {
         </div>
       </header>
 
-      <main className="shell__main">
+      <main className="shell__main" id="main" tabIndex={-1}>
         <article className="page">
           <h1>Why this exists</h1>
           <p>

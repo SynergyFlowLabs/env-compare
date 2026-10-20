@@ -92,7 +92,7 @@ Correctness is the whole product. A false "you're missing something" teaches peo
 
 ## Accessibility
 
-Keyboard path for every action, visible focus, labels on every input, colour never the only signal (each state has a glyph and a word), and dialogs that trap and restore focus. If you find a case that fails, it is a bug; please report it.
+Keyboard path for every action (starting with a skip link), visible focus, labels on every input, colour never the only signal (each state has a glyph and a word), and dialogs that trap and restore focus. If you find a case that fails, it is a bug; please report it.
 
 ## Contributing
 
@@ -115,7 +115,7 @@ docs/PRD.md     the specification, written before the code
 docs/DESIGN.md  palette, type, layout, motion, copy
 docs/PRIVACY.md the long version of the privacy claim
 e2e/            Playwright: no-network, no-storage, masked-DOM, hostile-storage
-tests/          281 unit and component tests, 32 parser fixtures
+tests/          282 unit and component tests, 32 parser fixtures
 AGENTS.md       conventions for humans and AI agents
 PROGRESS.md     build log and decisions
 ```
