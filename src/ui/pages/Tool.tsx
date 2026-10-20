@@ -32,6 +32,7 @@ import { FixPanel } from '../components/FixPanel';
 import { Diagnostics } from '../components/Diagnostics';
 import { Toast } from '../components/Toast';
 import { Dialog } from '../components/Dialog';
+import { AgentPromptDialog } from '../components/AgentPromptDialog';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -137,6 +138,32 @@ export function Tool() {
     },
     [dispatch],
   );
+
+  /**
+   * One click, two things: the prompt goes to the clipboard and the dialog
+   * opens. The copy is attempted first so the dialog can state what happened —
+   * claiming "copied" when the browser refused is worse than saying nothing.
+   */
+  const openPrompt = useCallback(
+    async (text: string) => {
+      const copied = await copyText(text);
+      dispatch({ type: 'promptOpen', text, copied });
+      if (copied) dispatch({ type: 'toast', message: 'Prompt copied for your agent' });
+    },
+    [dispatch],
+  );
+
+  /** Copy from inside the dialog: same feedback, no second dialog on top. */
+  const copyFromPromptDialog = useCallback(async () => {
+    const text = state.agentPrompt?.text;
+    if (!text) return;
+    const copied = await copyText(text);
+    dispatch({ type: 'promptCopied', copied });
+    dispatch({
+      type: 'toast',
+      message: copied ? 'Prompt copied for your agent' : 'Clipboard blocked — select the text instead',
+    });
+  }, [dispatch, state.agentPrompt]);
 
   const texts = useMemo(() => new Map(state.files.map((f) => [f.id, f.text])), [state.files]);
 
@@ -408,6 +435,7 @@ export function Tool() {
                   targetName={targetFile.name}
                   targetText={targetFile.text}
                   onCopy={(text, label) => void copy(text, label)}
+                  onPrompt={(text) => void openPrompt(text)}
                   onDownload={(filename, text) => {
                     downloadText(safeFileName(filename), text);
                     dispatch({ type: 'toast', message: `Downloaded ${filename}` });
@@ -445,6 +473,15 @@ export function Tool() {
             anywhere else — that is the point.
           </p>
         </Dialog>
+      ) : null}
+
+      {state.agentPrompt ? (
+        <AgentPromptDialog
+          text={state.agentPrompt.text}
+          copied={state.agentPrompt.copied}
+          onCopy={() => void copyFromPromptDialog()}
+          onClose={() => dispatch({ type: 'promptClose' })}
+        />
       ) : null}
 
       {state.copyFallback ? (

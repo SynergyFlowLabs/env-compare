@@ -78,7 +78,7 @@ e2e/            Playwright: privacy suites that run in CI, not locally by defaul
 
 ```bash
 npm run typecheck     # tsc, project-wide
-npm test              # 326 unit + component tests
+npm test              # 331 unit + component tests
 npm run build         # typecheck + production build
 npm run privacy       # storage/network/dependency guard
 npm run check         # all of the above, in the order CI runs them

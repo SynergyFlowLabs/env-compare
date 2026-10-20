@@ -12,6 +12,12 @@ export interface FixPanelProps {
   targetName: string;
   targetText: string;
   onCopy: (text: string, label: string) => void;
+  /**
+   * Copies the prompt and opens the dialog that shows it. Kept separate from
+   * `onCopy` because this action has a second half — the reader must be able to
+   * read what the agent is about to be given.
+   */
+  onPrompt: (text: string) => void;
   onDownload: (filename: string, text: string) => void;
 }
 
@@ -24,7 +30,15 @@ const REDACTIONS: Array<{ id: Redaction; label: string }> = [
 const CODE_BLOCK =
   'max-h-[320px] overflow-auto rounded-md border border-border bg-secondary/60 px-3 py-2.5 font-mono text-[12.5px] leading-relaxed whitespace-pre scroll-quiet';
 
-export function FixPanel({ comparison, targetId, targetName, targetText, onCopy, onDownload }: FixPanelProps) {
+export function FixPanel({
+  comparison,
+  targetId,
+  targetName,
+  targetText,
+  onCopy,
+  onPrompt,
+  onDownload,
+}: FixPanelProps) {
   const [redaction, setRedaction] = useState<Redaction>('keys');
 
   const fix = useMemo(() => buildFixBlock(comparison, targetId), [comparison, targetId]);
@@ -115,7 +129,7 @@ export function FixPanel({ comparison, targetId, targetName, targetText, onCopy,
             <Button
               type="button"
               variant="outline"
-              onClick={() => onCopy(prompt, 'Prompt copied')}
+              onClick={() => onPrompt(prompt)}
               disabled={prompt === ''}
             >
               <Bot aria-hidden="true" />
