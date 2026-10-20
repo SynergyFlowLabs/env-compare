@@ -92,7 +92,7 @@ Correctness is the whole product. A false "you're missing something" teaches peo
 
 ## Accessibility
 
-Keyboard path for every action (starting with a skip link), visible focus, labels on every input, colour never the only signal (each state has a glyph and a word), and dialogs that trap and restore focus. If you find a case that fails, it is a bug; please report it.
+Keyboard path for every action (starting with a skip link), a Light / Dark / Auto theme control that needs no storage, visible focus, labels on every input, colour never the only signal (each state has a glyph and a word), and dialogs that trap and restore focus. If you find a case that fails, it is a bug; please report it.
 
 ## Contributing
 

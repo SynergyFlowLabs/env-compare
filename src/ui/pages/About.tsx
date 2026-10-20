@@ -1,20 +1,11 @@
-import { Wordmark } from '../components/Brand';
+import { SiteHeader } from '../components/SiteHeader';
 import { SkipLink } from '../components/SkipLink';
 
 export function About() {
   return (
     <div className="shell">
       <SkipLink />
-      <header className="header">
-        <div className="header__inner">
-          <Wordmark />
-          <span className="header__spacer" />
-          <nav className="header__nav" aria-label="Site">
-            <a href="/">Tool</a>
-            <a href="/privacy">Privacy</a>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader current="about" />
 
       <main className="shell__main" id="main" tabIndex={-1}>
         <article className="page">

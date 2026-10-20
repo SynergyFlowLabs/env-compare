@@ -21,6 +21,7 @@ Implementation tracker for EnvCompare. The plan comes from [docs/PRD.md](docs/PR
 | 8 | UI: summary + table (aligned, ghost cells, filters, states) | §10.3 | ✅ done |
 | 9 | UI: raw view, fix panel, report panel, masking | §10.3, §13.6 | ✅ done |
 | 10 | Privacy layer: CSP headers, CI guard script, `/privacy` page | §13 | ✅ done |
+| 10b | Light / dark theme selection, without persistence | §10.2, DESIGN | ✅ done |
 | 11 | Component + e2e tests, a11y pass | §16 | ✅ 282 tests · e2e suites in CI · skip link + focus path |
 | 12 | Docs & launch artefacts: README demo, CONTRIBUTING, SECURITY, templates, LICENSE | §15 | ✅ done |
 
@@ -120,6 +121,20 @@ Findings worth flagging to reviewers:
 - **README** rewritten for a shipped product rather than a specification, with an honest limits section instead of a marketing claim.
 - Test count corrected in the copy: the PRD's "60+ fixtures" target is **32 fixtures today**; the README says what exists, not what was planned.
 - **Deployment**: `vercel.json` (security headers, `no-store` on HTML, `/privacy` and `/about` rewrites) is committed and the Vercel project `env-compare` exists on the `SynergyFlowLabs` hobby team. It could not be linked to the repository from here — the Vercel connector rejects a structured `git_repository`/`git_source` argument — so the remaining step is one click in the dashboard: **Project → Settings → Git → Connect `SynergyFlowLabs/env-compare`**, production branch `main`. Every push to `main` then deploys with no further configuration.
+
+### 2026-10-20 — Theme selection
+
+The palette already had light and dark values, but they were reachable only by changing the operating
+system's preference. That is not a light mode; it is a light *default*. Added:
+
+- **`Auto / Light / Dark`** in the header, as segmented buttons with `aria-pressed`. Auto is the default and follows the OS.
+- **`data-theme` on `<html>`** is the whole mechanism; the stylesheet does the rest. Forced light wins over a dark OS via `:root:not([data-theme='light'])` inside the media query.
+- **No persistence.** The choice lives in a module-level store read with `useSyncExternalStore`, so it is shared across the three pages (each is a real page load) and forgotten on reload. `tests/component/theme.test.tsx` asserts that no storage API is touched while switching.
+- **Shared `SiteHeader`**, so the control cannot exist on one page and not another.
+- **Readability fixes found by the new tests**, all in the light theme: `--ink-faint` was 3.34:1 on white, `--st-commented` was 4.48:1 on its tint (both now pass AA), and `#fff` text on the dark palette's pastel state fills was ~2:1 — hence `--on-accent` / `--on-state`, which flip to near-black in dark.
+- **`tests/unit/tokens.test.ts`** parses the stylesheet: the two dark blocks must be identical, every colour token must have both values, and every text/background pair must clear 4.5:1 (3:1 for the focus ring). The palette is the one thing a DOM test cannot check, so it is checked as text.
+
+**318 tests green**, typecheck clean, build 87.4 kB gzip, privacy guard green.
 
 ---
 
