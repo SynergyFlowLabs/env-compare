@@ -2,6 +2,8 @@
 
 **See what your `.env` is missing — without your secrets leaving the browser.**
 
+**[envcompare.vercel.app](https://envcompare.vercel.app)** · no install, no account, one page.
+
 Paste `.env.example` and `.env` — add `.env.local`, `.env.staging`, `.env.production` if you keep them. EnvCompare shows every variable that is missing, empty, still a placeholder, or leftover in each file, and hands you the exact block to paste back.
 
 No upload. No account. No storage. No analytics.

@@ -4,20 +4,81 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="referrer" content="no-referrer" />
+
     <title>EnvCompare — see what your .env is missing</title>
     <meta
       name="description"
-      content="Compare .env and .env.example in your browser. See every variable that is missing, empty, or leftover. Nothing is uploaded."
+      content="Paste .env and .env.example — or six more — and see every variable that is missing, empty, a placeholder, or leftover. Free, open source, nothing uploaded."
     />
+    <link rel="canonical" href="https://envcompare.vercel.app/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="author" content="EnvCompare contributors" />
+    <meta name="application-name" content="EnvCompare" />
+    <meta name="color-scheme" content="light dark" />
+
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#101215" media="(prefers-color-scheme: dark)" />
+    <meta name="msapplication-TileColor" content="#101215" />
+
+    <!-- Open Graph: read by Slack, Discord, LinkedIn, iMessage, Facebook. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="EnvCompare" />
+    <meta property="og:url" content="https://envcompare.vercel.app/" />
     <meta property="og:title" content="EnvCompare — see what your .env is missing" />
     <meta
       property="og:description"
-      content="Compare .env and .env.example side by side. Nothing is uploaded, nothing is stored."
+      content="Compare two to eight env files in your browser. See every variable that is missing, empty, or leftover — then copy the block to fix it. Nothing is uploaded."
     />
-    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://envcompare.vercel.app/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="EnvCompare: a dark card reading “See what your .env is missing”, beside a table of env keys marked Match, Missing, Same, Different and Extra."
+    />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- X / Twitter. summary_large_image keeps the full card on mobile. -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="EnvCompare — see what your .env is missing" />
+    <meta
+      name="twitter:description"
+      content="Compare two to eight env files in your browser. See every variable that is missing, empty, or leftover — then copy the block to fix it. Nothing is uploaded."
+    />
+    <meta name="twitter:image" content="https://envcompare.vercel.app/og-image.png" />
+    <meta
+      name="twitter:image:alt"
+      content="EnvCompare: a dark card reading “See what your .env is missing”, beside a table of env keys marked Match, Missing, Same, Different and Extra."
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "EnvCompare",
+        "url": "https://envcompare.vercel.app/",
+        "description": "Compare two to eight .env files in the browser and see every variable that is missing, empty, placeholder or leftover. Nothing is uploaded or stored.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "license": "https://opensource.org/license/mit",
+        "codeRepository": "https://github.com/SynergyFlowLabs/env-compare",
+        "image": "https://envcompare.vercel.app/og-image.png",
+        "featureList": [
+          "Compare two to eight env files at once",
+          "Detect missing, empty, placeholder, commented and differing variables",
+          "Copy a fix block for any target file",
+          "Redacted Markdown report and agent prompt",
+          "No upload, no storage, no analytics"
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
