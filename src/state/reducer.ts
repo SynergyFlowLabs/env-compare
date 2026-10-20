@@ -11,6 +11,27 @@ import { SAMPLE_EXAMPLE, SAMPLE_TARGET } from './sample';
 
 export type Tab = 'summary' | 'table' | 'raw' | 'fix';
 
+/**
+ * Two files is the floor, not the ceiling: `.env` next to `.env.example` is the
+ * common case, and `.env.local`, `.env.staging`, `.env.production` are the same
+ * question asked more than once. Eight is a UI limit, not an engine one — the
+ * table stops being readable before the comparison stops being useful.
+ */
+export const MIN_FILES = 2;
+export const MAX_FILES = 8;
+
+/** Offered in order when a box is added; the first unused one wins. */
+const SUGGESTED_NAMES = [
+  '.env.local',
+  '.env.production',
+  '.env.staging',
+  '.env.development',
+  '.env.test',
+  '.env.preview',
+  '.env.ci',
+  '.env.backup',
+];
+
 /** Exports that are copied and simultaneously shown in a dialog. */
 export type ExportKind = 'prompt' | 'report';
 
@@ -35,6 +56,13 @@ export interface UndoEntry {
 export interface AppState {
   files: EnvFileState[];
   referenceId: string;
+  /**
+   * Which target the Fix tab and the primary copy button act on. Null means
+   * "the first target", which is what a two-file comparison always wants.
+   */
+  activeTargetId: string | null;
+  /** Monotonic counter for new file ids; ids are never reused. */
+  nextFileId: number;
   /** `input` on first load; `results` once both sides have something to compare. */
   view: 'input' | 'results';
   tab: Tab;
@@ -73,6 +101,10 @@ export type Action =
   | { type: 'paste'; id: string; text: string }
   | { type: 'advance' }
   | { type: 'name'; id: string; name: string }
+  | { type: 'addFile' }
+  | { type: 'removeFile'; id: string }
+  | { type: 'reference'; id: string }
+  | { type: 'target'; id: string }
   | { type: 'swapRoles' }
   | { type: 'loadSample' }
   | { type: 'clearAll' }
@@ -100,6 +132,8 @@ export const initialState: AppState = {
     { id: 'b', name: '.env', text: '' },
   ],
   referenceId: 'a',
+  activeTargetId: null,
+  nextFileId: 3,
   view: 'input',
   // The table is the working surface: it is where the answer is actionable.
   tab: 'table',
@@ -140,9 +174,63 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, files, referenceId };
     }
 
+    case 'addFile': {
+      if (state.files.length >= MAX_FILES) return state;
+      const used = new Set(state.files.map((f) => f.name.trim()));
+      const name = SUGGESTED_NAMES.find((candidate) => !used.has(candidate)) ?? 'untitled.env';
+      const file: EnvFileState = { id: `f${state.nextFileId}`, name, text: '' };
+      return {
+        ...state,
+        files: [...state.files, file],
+        nextFileId: state.nextFileId + 1,
+        view: 'input',
+        // Adding a box is a request to edit, not to compare: advancing here
+        // would flip straight back to the results before the new box is filled.
+        // The paste that follows re-arms the comparison (see the 'paste' case).
+        autoAdvance: false,
+      };
+    }
+
+    case 'removeFile': {
+      if (state.files.length <= MIN_FILES) return state;
+      const index = state.files.findIndex((f) => f.id === action.id);
+      if (index === -1) return state;
+      const files = state.files.filter((f) => f.id !== action.id);
+      // Removing the reference promotes the next file rather than leaving the
+      // comparison without one.
+      const referenceId =
+        state.referenceId === action.id ? (files[Math.min(index, files.length - 1)]?.id ?? files[0]!.id) : state.referenceId;
+      return {
+        ...state,
+        files,
+        referenceId,
+        activeTargetId: state.activeTargetId === action.id ? null : state.activeTargetId,
+        revealed: [],
+        undo: state.undo.filter((entry) => entry.fileId !== action.id),
+      };
+    }
+
+    case 'reference':
+      if (action.id === state.referenceId) return state;
+      if (!state.files.some((f) => f.id === action.id)) return state;
+      // Choosing the reference is explicit, so the name heuristic must not
+      // second-guess it on the next rename.
+      return { ...state, referenceId: action.id, activeTargetId: null, revealed: [] };
+
+    case 'target':
+      return { ...state, activeTargetId: action.id };
+
     case 'swapRoles': {
-      const referenceId = state.files.find((f) => f.id !== state.referenceId)?.id ?? state.referenceId;
-      return { ...state, referenceId, revealed: [] };
+      // With more than two files "swap" means "the next one becomes the
+      // reference", which cycles through them in the order they are shown.
+      const index = state.files.findIndex((f) => f.id === state.referenceId);
+      const next = state.files[(index + 1) % state.files.length] ?? state.files[0];
+      return {
+        ...state,
+        referenceId: next?.id ?? state.referenceId,
+        activeTargetId: null,
+        revealed: [],
+      };
     }
 
     case 'loadSample':
@@ -164,7 +252,12 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'clearAll':
       return {
         ...initialState,
+        // Keep the boxes (and the id counter) the reader has arranged; clear
+        // only what was pasted into them. Resetting the counter would mint
+        // duplicate ids on the next "Add another file".
         files: state.files.map((f) => ({ ...f, text: '' })),
+        nextFileId: state.nextFileId,
+        activeTargetId: state.activeTargetId,
       };
 
     case 'view':

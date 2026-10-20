@@ -9,8 +9,10 @@ import { Label } from './ui/label';
 
 export interface FixPanelProps {
   comparison: Comparison;
-  targetId: string;
-  targetName: string;
+  /** Every target, in the order the boxes are shown. */
+  targets: Array<{ id: string; name: string }>;
+  activeTargetId: string;
+  onTargetChange: (id: string) => void;
   targetText: string;
   onCopy: (text: string, label: string) => void;
   /**
@@ -33,14 +35,19 @@ const CODE_BLOCK =
 
 export function FixPanel({
   comparison,
-  targetId,
-  targetName,
+  targets,
+  activeTargetId,
+  onTargetChange,
   targetText,
   onCopy,
   onExport,
   onDownload,
 }: FixPanelProps) {
   const [redaction, setRedaction] = useState<Redaction>('keys');
+
+  const targetId = activeTargetId;
+  const targetName = targets.find((t) => t.id === targetId)?.name ?? 'this file';
+  const multipleTargets = targets.length > 1;
 
   const fix = useMemo(() => buildFixBlock(comparison, targetId), [comparison, targetId]);
   const prompt = useMemo(() => buildAgentPrompt(comparison, targetId), [comparison, targetId]);
@@ -57,7 +64,29 @@ export function FixPanel({
       <Card>
         <CardHeader className="border-b border-border">
           <CardTitle id="fix-heading" className="flex-1">
-            Paste this into <span className="mono">{targetName}</span>
+            Paste this into{' '}
+            {multipleTargets ? (
+              <label className="sr-only" htmlFor="fix-target">
+                Target file
+              </label>
+            ) : null}
+            {multipleTargets ? (
+              <select
+                id="fix-target"
+                value={targetId}
+                onChange={(event) => onTargetChange(event.target.value)}
+                aria-label="Target file to fix"
+                className="mono h-7 rounded-sm border border-input bg-card px-1.5 text-[12.5px] font-medium text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/25 focus-visible:outline-none"
+              >
+                {targets.map((target) => (
+                  <option key={target.id} value={target.id}>
+                    {target.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="mono">{targetName}</span>
+            )}
           </CardTitle>
           <span className="text-[12px] text-muted-foreground">{fix.keys.length} to add</span>
         </CardHeader>

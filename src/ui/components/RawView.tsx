@@ -34,7 +34,12 @@ const LINE_TONE: Record<Presence, string> = {
  */
 export function RawView({ comparison, texts, parsed, maskValues }: RawViewProps) {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div
+      className={cn(
+        'grid gap-4',
+        comparison.perFile.length > 2 ? 'lg:grid-cols-2 2xl:grid-cols-3' : 'lg:grid-cols-2',
+      )}
+    >
       {comparison.perFile.map((file) => (
         <RawPane
           key={file.fileId}

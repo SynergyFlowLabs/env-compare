@@ -2,7 +2,7 @@
 
 **See what your `.env` is missing — without your secrets leaving the browser.**
 
-Paste `.env.example` and `.env`. EnvCompare shows every variable that is missing, empty, still a placeholder, or leftover, and hands you the exact block to paste back into your file.
+Paste `.env.example` and `.env` — add `.env.local`, `.env.staging`, `.env.production` if you keep them. EnvCompare shows every variable that is missing, empty, still a placeholder, or leftover in each file, and hands you the exact block to paste back.
 
 No upload. No account. No storage. No analytics.
 
@@ -35,7 +35,7 @@ Both pass a naive "does this key exist?" check.
 
 ## What it does
 
-- **Compares** your files against a reference, usually `.env.example`.
+- **Compares two or more** env files against a reference, usually `.env.example`: `.env`, `.env.local`, `.env.staging`, `.env.production`, up to eight boxes.
 - **Classifies** every variable in every file: missing · empty · placeholder · commented out · set · set differently.
 - **Shows four views:** a plain-language summary, a row-aligned table with inline editing, the annotated raw text, and a copy-ready fix.
 - **Gives you the fix**, not just the diagnosis: `Copy 3 variables for .env`.
@@ -120,7 +120,7 @@ docs/PRD.md     the specification, written before the code
 docs/DESIGN.md  palette, type, layout, motion, copy
 docs/PRIVACY.md the long version of the privacy claim
 e2e/            Playwright: no-network, no-storage, masked-DOM, hostile-storage
-tests/          347 unit and component tests, 32 parser fixtures
+tests/          365 unit and component tests, 32 parser fixtures
 AGENTS.md       conventions for humans and AI agents
 PROGRESS.md     build log and decisions
 ```
@@ -129,8 +129,8 @@ PROGRESS.md     build log and decisions
 
 | Version | Scope |
 | --- | --- |
-| **v1.0** ✅ | Reference auto-detection · six-state classification · summary, table, raw and fix views · inline editing · add/remove/uncomment with undo · masking · redacted report · copy/download · privacy guard |
-| **v1.1** | N-file matrix (3+) · framework presets · richer `# required` annotations |
+| **v1.0** ✅ | Reference auto-detection · six-state classification · **N-file matrix (2–8 files)** · summary, table, raw and fix views · inline editing · add/remove/uncomment with undo · masking · redacted report · copy/download · privacy guard |
+| **v1.1** | Framework presets (Next.js, Vite, Docker Compose) · richer `# required` annotations |
 | **v2 (if demanded)** | Shared core as a CLI · a GitHub Action for `.env.example` drift |
 
 ## License
